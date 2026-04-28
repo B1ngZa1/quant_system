@@ -1,0 +1,352 @@
+// 全局样式
+@use './variables.scss' as *;
+
+// ============================================
+// 基础重置
+// ============================================
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.15), transparent 24%),
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 22%),
+    linear-gradient(180deg, #0f172a 0%, #020617 46%, #000000 100%);
+  background-attachment: fixed;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
+
+// ============================================
+// 滚动条样式
+// ============================================
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+// ============================================
+// Element Plus 覆盖
+// ============================================
+.el-button {
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+
+  &--primary {
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: var(--shadow-primary);
+    color: #ffffff;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 26px rgba(37, 99, 235, 0.34);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  &--default {
+    border-color: var(--line-soft);
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.03);
+
+    &:hover {
+      border-color: var(--line-strong);
+      color: var(--primary-500);
+      background: rgba(37, 99, 235, 0.08);
+    }
+  }
+}
+
+.el-input {
+  &__wrapper {
+    border-radius: var(--radius-lg);
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid transparent;
+    transition: all var(--transition-base);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    &.is-focus {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(96, 165, 250, 0.34);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+  }
+
+  &__inner {
+    font-size: 15px;
+    color: var(--text-primary);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+  }
+}
+
+.el-card {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow-base);
+  background: var(--bg-panel);
+  transition: all var(--transition-base);
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.el-tag {
+  border-radius: var(--radius-base);
+  font-weight: 500;
+}
+
+.el-radio-button {
+  &__inner {
+    border-radius: var(--radius-base) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: var(--line-soft) !important;
+    color: var(--text-secondary) !important;
+    box-shadow: none !important;
+  }
+
+  &.is-active .el-radio-button__inner {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(30, 64, 175, 0.32)) !important;
+    border-color: rgba(96, 165, 250, 0.3) !important;
+    color: #fff3ef !important;
+  }
+}
+
+.el-select__wrapper,
+.el-date-editor.el-input__wrapper {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  border-radius: var(--radius-lg) !important;
+
+  &.is-focused,
+  &:hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(96, 165, 250, 0.24) !important;
+  }
+}
+
+.el-select__placeholder,
+.el-select__selected-item,
+.el-date-editor .el-range-input,
+.el-date-editor .el-range-separator {
+  color: var(--text-secondary) !important;
+}
+
+.el-table {
+  --el-table-bg-color: rgba(255, 255, 255, 0.02);
+  --el-table-tr-bg-color: transparent;
+  --el-table-header-bg-color: rgba(255, 255, 255, 0.04);
+  --el-table-border-color: rgba(255, 255, 255, 0.06);
+  --el-table-row-hover-bg-color: rgba(37, 99, 235, 0.06);
+  --el-table-text-color: var(--text-secondary);
+  --el-table-header-text-color: var(--text-primary);
+}
+
+.el-dialog,
+.el-drawer {
+  --el-dialog-bg-color: #1b141a;
+  --el-drawer-bg-color: #1b141a;
+  --el-text-color-primary: var(--text-primary);
+  --el-text-color-regular: var(--text-secondary);
+}
+
+.el-message-box {
+  background: #1b141a !important;
+  border: 1px solid var(--line-soft) !important;
+}
+
+.el-message-box__title,
+.el-message-box__content {
+  color: var(--text-primary) !important;
+}
+
+#nprogress .bar {
+  background: var(--primary-500) !important;
+  box-shadow: 0 0 16px rgba(37, 99, 235, 0.8);
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.8), 0 0 5px rgba(37, 99, 235, 0.8) !important;
+}
+
+// ============================================
+// 工具类
+// ============================================
+.text {
+  &-center { text-align: center; }
+  &-left { text-align: left; }
+  &-right { text-align: right; }
+}
+
+.font {
+  &-normal { font-weight: 400; }
+  &-medium { font-weight: 500; }
+  &-semibold { font-weight: 600; }
+  &-bold { font-weight: 700; }
+}
+
+.text {
+  &-xs { font-size: 12px; }
+  &-sm { font-size: 13px; }
+  &-base { font-size: 14px; }
+  &-lg { font-size: 16px; }
+  &-xl { font-size: 18px; }
+  &-2xl { font-size: 20px; }
+  &-3xl { font-size: 24px; }
+}
+
+.text {
+  &-primary { color: var(--primary-500); }
+  &-success { color: var(--success-500); }
+  &-warning { color: var(--warning-500); }
+  &-danger { color: var(--danger-500); }
+  &-muted { color: var(--gray-400); }
+}
+
+// 布局
+.flex {
+  display: flex;
+
+  &-col { flex-direction: column; }
+  &-1 { flex: 1; }
+  &-center { align-items: center; justify-content: center; }
+  &-between { align-items: center; justify-content: space-between; }
+}
+
+.grid {
+  display: grid;
+}
+
+// 间距
+@for $i from 0 through 12 {
+  .m-#{$i} { margin: #{$i * 4}px; }
+  .mt-#{$i} { margin-top: #{$i * 4}px; }
+  .mr-#{$i} { margin-right: #{$i * 4}px; }
+  .mb-#{$i} { margin-bottom: #{$i * 4}px; }
+  .ml-#{$i} { margin-left: #{$i * 4}px; }
+
+  .p-#{$i} { padding: #{$i * 4}px; }
+  .pt-#{$i} { padding-top: #{$i * 4}px; }
+  .pr-#{$i} { padding-right: #{$i * 4}px; }
+  .pb-#{$i} { padding-bottom: #{$i * 4}px; }
+  .pl-#{$i} { padding-left: #{$i * 4}px; }
+}
+
+// ============================================
+// 动画
+// ============================================
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate {
+  &-fade-in { animation: fadeIn 0.3s ease; }
+  &-spin { animation: spin 1s linear infinite; }
+  &-pulse { animation: pulse 2s ease-in-out infinite; }
+}
+
+// ============================================
+// 金融专用
+// ============================================
+.up {
+  color: var(--up-color);
+}
+
+.down {
+  color: var(--down-color);
+}
+
+.number {
+  font-family: 'SF Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+// ============================================
+// 深色模式
+// ============================================
+html.dark {
+  body {
+    background: var(--bg-cream);
+    color: var(--text-primary);
+  }
+
+  .el-card {
+    background: var(--bg-panel);
+    border-color: var(--line-soft);
+  }
+
+  .el-input__wrapper {
+    background: rgba(255, 255, 255, 0.04);
+
+    &.is-focus {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--primary-400);
+    }
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.16);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.24);
+    }
+  }
+}

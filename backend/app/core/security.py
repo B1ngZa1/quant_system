@@ -1,0 +1,276 @@
+"""安全与认证模块"""
+
+import logging
+import pickle
+import threading
+from datetime import datetime, timedelta
+from typing import Optional
+from uuid import uuid4
+
+import bcrypt
+import redis
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from passlib.exc import UnknownHashError
+
+from app.core.config import settings
+
+log = logging.getLogger(__name__)
+
+pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
+
+security_bearer = HTTPBearer(auto_error=False)
+_revoked_jti_store: dict[str, datetime] = {}
+_revoked_jti_lock = threading.Lock()
+
+REDIS_BLACKLIST_PREFIX = "token:revoked:"
+_redis_blacklist_available = False
+_sync_redis_client: Optional[redis.Redis] = None
+_sync_redis_lock = threading.Lock()
+
+
+def _get_sync_redis_client() -> Optional[redis.Redis]:
+    global _sync_redis_client
+    if _sync_redis_client is not None:
+        return _sync_redis_client
+    with _sync_redis_lock:
+        if _sync_redis_client is not None:
+            return _sync_redis_client
+        try:
+            _sync_redis_client = redis.Redis(
+                host=settings.REDIS_HOST,
+                port=settings.REDIS_PORT,
+                db=settings.REDIS_DB,
+                password=settings.REDIS_PASSWORD,
+                decode_responses=False,
+                socket_timeout=1.0,
+                socket_connect_timeout=1.0,
+            )
+            _sync_redis_client.ping()
+            log.info("Sync Redis client connected successfully")
+            return _sync_redis_client
+        except Exception as e:
+            log.warning(f"Sync Redis client connection failed: {e}")
+            _sync_redis_client = None
+            return None
+
+
+def _set_redis_available(available: bool) -> None:
+    global _redis_blacklist_available
+    _redis_blacklist_available = available
+
+
+def is_redis_blacklist_available() -> bool:
+    return _redis_blacklist_available
+
+
+def _check_token_in_redis_sync(jti: str) -> bool:
+    client = _get_sync_redis_client()
+    if client is None:
+        return False
+    try:
+        key = f"{REDIS_BLACKLIST_PREFIX}{jti}"
+        return client.exists(key) > 0
+    except Exception as e:
+        log.error(f"Redis exists check failed: {e}")
+        return False
+
+
+def _add_token_to_redis_sync(jti: str, ttl_seconds: int) -> bool:
+    client = _get_sync_redis_client()
+    if client is None:
+        return False
+    try:
+        key = f"{REDIS_BLACKLIST_PREFIX}{jti}"
+        client.setex(key, ttl_seconds, pickle.dumps(True))
+        return True
+    except Exception as e:
+        log.error(f"Redis setex failed: {e}")
+        return False
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """验证密码"""
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except (UnknownHashError, ValueError, TypeError):
+        if isinstance(hashed_password, str) and hashed_password.startswith(("$2a$", "$2b$", "$2y$")):
+            try:
+                return bcrypt.checkpw(
+                    plain_password.encode("utf-8"),
+                    hashed_password.encode("utf-8"),
+                )
+            except Exception:
+                return False
+        return False
+
+
+def get_password_hash(password: str) -> str:
+    """获取密码哈希"""
+    return pwd_context.hash(password)
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """创建访问令牌"""
+    to_encode = data.copy()
+    if "sub" in to_encode and to_encode["sub"] is not None:
+        to_encode["sub"] = str(to_encode["sub"])
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    to_encode.update(
+        {"exp": expire, "type": "access", "iat": datetime.utcnow(), "jti": uuid4().hex}
+    )
+
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt
+
+
+def create_refresh_token(data: dict) -> str:
+    """创建刷新令牌"""
+    to_encode = data.copy()
+    if "sub" in to_encode and to_encode["sub"] is not None:
+        to_encode["sub"] = str(to_encode["sub"])
+    expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+
+    to_encode.update(
+        {"exp": expire, "type": "refresh", "iat": datetime.utcnow(), "jti": uuid4().hex}
+    )
+
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt
+
+
+def decode_token(token: str) -> Optional[dict]:
+    """解码 JWT 令牌"""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        return payload
+    except JWTError:
+        return None
+
+
+def _cleanup_revoked_tokens(now: Optional[datetime] = None) -> None:
+    current = now or datetime.utcnow()
+    with _revoked_jti_lock:
+        expired = [jti for jti, exp in _revoked_jti_store.items() if exp <= current]
+        for jti in expired:
+            _revoked_jti_store.pop(jti, None)
+
+
+def revoke_token(token: str) -> None:
+    """将 token 加入黑名单，直到其自然过期。"""
+    payload = decode_token(token)
+    if not payload:
+        return
+    jti = payload.get("jti")
+    exp = payload.get("exp")
+    if not jti or exp is None:
+        return
+    expire_at = datetime.utcfromtimestamp(exp)
+    ttl_seconds = int(exp - datetime.utcnow().timestamp())
+    if ttl_seconds <= 0:
+        return
+
+    thread = threading.Thread(target=_revoke_token_background, args=(jti, expire_at, ttl_seconds), daemon=True)
+    thread.start()
+
+
+def _revoke_token_background(jti: str, expire_at: datetime, ttl_seconds: int) -> None:
+    redis_success = _add_token_to_redis_sync(jti, ttl_seconds)
+    if redis_success:
+        _set_redis_available(True)
+        log.info(f"Token {jti} added to Redis blacklist with TTL {ttl_seconds}s")
+    else:
+        _set_redis_available(False)
+        log.warning("Redis unavailable, falling back to memory blacklist")
+        _add_token_to_memory(jti, expire_at)
+
+
+def _add_token_to_memory(jti: str, expire_at: datetime) -> None:
+    _cleanup_revoked_tokens()
+    with _revoked_jti_lock:
+        _revoked_jti_store[str(jti)] = expire_at
+
+
+def is_token_revoked(payload: Optional[dict]) -> bool:
+    """判断 token 是否已被吊销。"""
+    if not payload:
+        return False
+    jti = payload.get("jti")
+    if not jti:
+        return False
+
+    redis_revoked = _check_token_in_redis_sync(str(jti))
+    if redis_revoked:
+        return True
+
+    if _redis_blacklist_available:
+        _cleanup_revoked_tokens()
+        with _revoked_jti_lock:
+            expire_at = _revoked_jti_store.get(str(jti))
+        if not expire_at:
+            return False
+        return expire_at > datetime.utcnow()
+
+    _cleanup_revoked_tokens()
+    with _revoked_jti_lock:
+        expire_at = _revoked_jti_store.get(str(jti))
+    if not expire_at:
+        return False
+    return expire_at > datetime.utcnow()
+
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security_bearer)) -> dict:
+    """验证 JWT 令牌依赖"""
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="未提供认证凭证",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = credentials.credentials
+    payload = decode_token(token)
+
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的认证凭证",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if is_token_revoked(payload):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="令牌已失效，请重新登录",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="令牌类型错误",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="令牌中未找到用户标识",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return payload
+
+
+def verify_refresh_token(token: str) -> Optional[dict]:
+    """验证刷新令牌"""
+    payload = decode_token(token)
+    if payload is None or payload.get("type") != "refresh" or is_token_revoked(payload):
+        return None
+    return payload

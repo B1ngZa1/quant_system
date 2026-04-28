@@ -1,0 +1,192 @@
+"""数据引擎状态与行情接口"""
+import json
+import time
+from typing import Any, Optional
+
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_db, get_cache
+from app.db.redis import RedisCache
+from app.schemas.base import DataResponse
+from app.services.data_engine import data_engine_service
+from app.services.data_provider import DataProvider
+from app.services.local_market_data import list_local_dataset_files, local_data_dir
+
+router = APIRouter()
+data_provider: DataProvider = data_engine_service
+
+
+def _debug_log(hypothesis_id: str, location: str, message: str, data: dict[str, Any]) -> None:
+    # #region agent log
+    try:
+        with open(r"c:\University\Code_total\quant_system\.cursor\debug.log", "a", encoding="utf-8") as f:
+            f.write(
+                json.dumps(
+                    {
+                        "runId": "baseline",
+                        "hypothesisId": hypothesis_id,
+                        "location": location,
+                        "message": message,
+                        "data": data,
+                        "timestamp": int(time.time() * 1000),
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
+    except Exception:
+        pass
+    # #endregion
+
+
+def _parse_fields_param(fields: Optional[str]) -> Optional[list[str]]:
+    if not fields:
+        return None
+    vals = [x.strip() for x in fields.split(",") if x.strip()]
+    return vals or None
+
+
+@router.get("/quotes", response_model=DataResponse[dict])
+async def get_quotes(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    search: Optional[str] = None,
+    exchange: Optional[str] = Query(None, pattern="^(SSE|SZSE|BSE)$"),
+    industry: Optional[str] = None,
+    fields: Optional[str] = Query(
+        None, description="逗号分隔字段裁剪，如 symbol,name,current_price,change_pct"
+    ),
+    field_profile: str = Query("lite", pattern="^(lite|full)$"),
+    sort_by: str = Query("current_price"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
+    db: AsyncSession = Depends(get_db),
+    cache: RedisCache = Depends(get_cache),
+) -> Any:
+    """获取聚合行情（主/备/兜底自动切换）"""
+    _debug_log(
+        "H4",
+        "backend/app/api/v1/data.py:get_quotes:entry",
+        "Data quotes request received",
+        {"page": page, "pageSize": page_size, "hasSearch": bool(search), "fieldProfile": field_profile, "sortBy": sort_by},
+    )
+    payload = await data_provider.get_quotes(
+        page=page,
+        page_size=page_size,
+        search=search,
+        exchange=exchange,
+        industry=industry,
+        db=db,
+        cache=cache,
+        fields=_parse_fields_param(fields),
+        field_profile=field_profile,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
+    _debug_log(
+        "H4",
+        "backend/app/api/v1/data.py:get_quotes:exit",
+        "Data quotes response built",
+        {"rowsCount": len(payload.get("rows", []) if isinstance(payload, dict) else []), "hasSource": bool(payload.get("source")) if isinstance(payload, dict) else False},
+    )
+    return DataResponse(data=payload)
+
+
+@router.get("/source/status", response_model=DataResponse[dict])
+async def get_source_status() -> Any:
+    """获取数据源健康状态"""
+    return DataResponse(data=data_engine_service.get_source_status())
+
+
+@router.get("/local-datasets", response_model=DataResponse[dict])
+async def list_local_datasets() -> Any:
+    """列出本地 datasets 目录下的 CSV（backend/data/local_datasets）"""
+    files = list_local_dataset_files()
+    root = local_data_dir()
+    return DataResponse(
+        data={
+            "root": str(root),
+            "files": files,
+            "total": len(files),
+        }
+    )
+
+
+@router.get("/list", response_model=DataResponse[dict])
+async def list_items(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    search: Optional[str] = None,
+    fields: Optional[str] = Query(None, description="逗号分隔字段裁剪"),
+    field_profile: str = Query("lite", pattern="^(lite|full)$"),
+    sort_by: str = Query("current_price"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
+    db: AsyncSession = Depends(get_db),
+    cache: RedisCache = Depends(get_cache),
+) -> Any:
+    """标准化接口：列表。"""
+    return await get_quotes(
+        page,
+        page_size,
+        search,
+        None,
+        None,
+        fields,
+        field_profile,
+        sort_by,
+        sort_order,
+        db,
+        cache,
+    )
+
+
+@router.get("/detail/{symbol}", response_model=DataResponse[dict])
+async def detail_item(
+    symbol: str,
+    db: AsyncSession = Depends(get_db),
+    cache: RedisCache = Depends(get_cache),
+) -> Any:
+    """标准化接口：详情。"""
+    payload = await data_provider.get_quotes(
+        page=1,
+        page_size=1,
+        search=symbol,
+        exchange=None,
+        industry=None,
+        db=db,
+        cache=cache,
+        fields=None,
+        field_profile="full",
+        sort_by="current_price",
+        sort_order="desc",
+    )
+    rows = payload.get("rows", [])
+    return DataResponse(data=rows[0] if rows else {"symbol": symbol.upper(), "exists": False})
+
+
+@router.post("/create", response_model=DataResponse[dict])
+async def create_item() -> Any:
+    """标准化接口：创建任务。"""
+    return DataResponse(data={"accepted": True, "message": "数据采集任务已受理"})
+
+
+@router.post("/action/{action_name}", response_model=DataResponse[dict])
+async def action_item(action_name: str) -> Any:
+    """标准化接口：动作。"""
+    if action_name == "status":
+        return await get_source_status()
+    return DataResponse(data={"action": action_name, "accepted": True})
+
+
+@router.put("/update/{symbol}", response_model=DataResponse[dict])
+@router.patch("/update/{symbol}", response_model=DataResponse[dict])
+async def update_item(symbol: str) -> Any:
+    """标准化接口：更新。"""
+    return DataResponse(data={"symbol": symbol.upper(), "updated": True})
+
+
+@router.delete("/remove/{symbol}", response_model=DataResponse[dict])
+async def remove_item(symbol: str) -> Any:
+    """标准化接口：删除。"""
+    return DataResponse(data={"symbol": symbol.upper(), "removed": True})
+

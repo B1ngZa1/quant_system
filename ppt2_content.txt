@@ -1,0 +1,70 @@
+--- Slide 1 ---
+统计方法的应用
+以2025MCMC题   #2510006  为例
+--- Slide 2 ---
+MCM 常用统计与数据驱动方法清单
+--- Slide 3 ---
+MCM 我们掌握的统计方法
+--- Slide 4 ---
+回归与预测模型
+--- Slide 5 ---
+鲁棒回归
+--- Slide 6 ---
+常用的鲁棒算法
+Random Sample Consensus
+随机抽一小撮数据去建模型。
+用这个模型测试所有数据，数一数有多少个点“同意”这个模型（在误差范围内）。
+重复几千次，最后选出“同意人数”最多的那个模型。
+Theil-Sen Estimator
+计算任意两点之间的斜率，然后取所有斜率的中位数 (Median)
+--- Slide 7 ---
+鲁棒算法应用
+传感器故障数据：
+题目给了一堆水位传感器数据，让你预测洪水。其中某几个传感器坏了，偶尔会传回 9999 或 0。
+策略：用 RANSAC 自动过滤，并在论文中写：“由于传感器数据存在不可预测的脉冲噪声，我们采用 RANSAC 算法进行鲁棒拟合，自动剔除异常读数。”
+经济/人口预测（突发事件影响）：
+预测某国 GDP。中间有一年发生了战争或疫情，数据断崖式下跌。如果用 OLS，这一个点会拉低整体的增长率预测。用 Huber Regression 或 Theil-Sen 可以减小这一年对长期趋势判断的影响。
+关系验证：
+你想证明 A 和 B 正相关。画图一看，大部分点是正相关，但有几个点乱飘。用 OLS 可能算出 P 值不显著。用 鲁棒回归 可能就能得出显著的正相关结论，证明那些点确实是干扰项。
+--- Slide 8 ---
+--- Slide 9 ---
+检验模型
+--- Slide 10 ---
+时间序列
+--- Slide 11 ---
+生存分析
+--- Slide 12 ---
+模拟推断
+--- Slide 13 ---
+Copulas
+--- Slide 14 ---
+无监督学习
+--- Slide 15 ---
+--- Slide 16 ---
+统计模型选择决策指南
+--- Slide 17 ---
+近五年 MCM 赛题中统计模型使用情况汇总表
+--- Slide 18 ---
+统计模型的应用部分描述
+数据预处理
+模型构建
+模型求解与验证
+结果解释
+你为什么选这个模型？模型长什么样？结果可信吗？具体的业务含义是什么？
+--- Slide 19 ---
+数据预处理
+We assume each country excels in one or more major sports categories. Clustering anal ysis helps identify these strengths and groups similar events together. 
+We construct a matrix with countries as rows and events as columns, where the values represent medal-winning rates. K-means clustering uses these rates to group similar events. The optimal number of clusters, K = 6, is determined using the e
+我们假设每个国家在一项或多项主要体育类别中表现出色。聚类分析有助于识别这些 优势并将相似的事件分组在一起。
+我们构建一个矩阵，其中国家为行，赛事为列，其中的值代表奖牌获奖率。 K 均值聚 类使用这些比率对相似事件进行分组。最佳簇数 K = 6 是使用肘法和文献见解确定的。错 误分类的点会被手动纠正以确保准确性。
+--- Slide 20 ---
+模型构建
+--- Slide 21 ---
+模型求解和验证
+--- Slide 22 ---
+结果解释
+对于结果的数字具体含义进行解释
+
+--- Slide 23 ---
+统计模型实现的案例关于ARIMA模型的复现
+--- Slide 24 ---

@@ -1,0 +1,84 @@
+.login-page {
+  .brand-section {
+    .decorations {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+
+      .deco-circle {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.5;
+      }
+
+      .c1 {
+        width: 320px;
+        height: 320px;
+        background: rgba(96, 165, 250, 0.35);
+        top: -80px;
+        right: -80px;
+      }
+
+      .c2 {
+        width: 240px;
+        height: 240px;
+        background: rgba(245, 158, 11, 0.28);
+        bottom: 60px;
+        left: -40px;
+      }
+
+      .c3 {
+        width: 160px;
+        height: 160px;
+        background: rgba(125, 211, 252, 0.28);
+        top: 35%;
+        right: 8%;
+      }
+    }
+  }
+
+  .form-section {
+    .login-form {
+      :deep(.custom-input) {
+        .el-input__wrapper {
+          transition: all 0.2s;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.09);
+          }
+        }
+      }
+
+      .submit-btn {
+        transition: all 0.2s;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 8px 20px rgba(37, 99, 235, 0.38);
+        }
+
+        .btn-icon {
+          margin-left: 6px;
+          transition: transform 0.2s;
+        }
+
+        &:hover .btn-icon {
+          transform: translateX(3px);
+        }
+      }
+    }
+
+    .social-buttons {
+      .social-btn {
+        transition: all 0.2s;
+
+        &:hover {
+          border-color: rgba(96, 165, 250, 0.35);
+          background: rgba(255, 255, 255, 0.06);
+        }
+      }
+    }
+  }
+}
