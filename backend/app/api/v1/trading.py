@@ -24,6 +24,7 @@ async def list_items(
 ) -> Any:
     query = select(Trade).where(Trade.user_id == current_user.id)
     count_query = select(func.count(Trade.id)).where(Trade.user_id == current_user.id)
+    query = query.order_by(Trade.created_at.desc())
     query = query.offset(params.offset).limit(params.page_size)
     rows = (await db.execute(query)).scalars().all()
     total = (await db.execute(count_query)).scalar() or 0
@@ -72,7 +73,7 @@ async def create_item(
         user_id=current_user.id,
         is_simulated=payload.is_simulated,
         remark=payload.remark,
-        submitted_at=datetime.utcnow(),
+        submitted_at=datetime.now(timezone.utc),
     )
     db.add(trade)
     await db.commit()
@@ -97,7 +98,7 @@ async def action_item(
     elif action == "fill":
         row.status = TradeStatus.FILLED
         row.executed_quantity = row.quantity
-        row.executed_at = datetime.utcnow()
+        row.executed_at = datetime.now(timezone.utc)
     else:
         row.status = TradeStatus.SUBMITTED
     await db.commit()

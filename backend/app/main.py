@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections import defaultdict, deque
+from collections import OrderedDict
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
@@ -64,6 +64,14 @@ async def lifespan(app: FastAPI):
             log.info("已启动每日行情同步后台任务（本地 CSV 优先入库 + AKShare/Tushare 补全）")
         except Exception as e:
             log.warning(f"每日行情同步任务未启动: {e}")
+
+    # 启动缓存预热（后台执行，不阻塞启动）
+    try:
+        from app.services.cache_warmer import cache_warmer
+        asyncio.create_task(cache_warmer.warmup_background())
+        log.info("缓存预热任务已启动")
+    except Exception as e:
+        log.warning(f"缓存预热任务未启动: {e}")
 
     yield
 
@@ -147,7 +155,9 @@ def create_application() -> FastAPI:
         response.headers["X-Process-Time"] = str(process_time)
         return response
 
-    rate_buckets: dict[str, deque[float]] = defaultdict(deque)
+    # 有界 LRU 限流桶（最多保留 2000 个 IP 桶，避免内存泄漏）
+    _RATE_BUCKET_MAX = 2000
+    rate_buckets: OrderedDict[str, list[float]] = OrderedDict()
 
     @app.middleware("http")
     async def rate_limit_guard(request: Request, call_next):
@@ -166,9 +176,16 @@ def create_application() -> FastAPI:
         )
 
         bucket_key = f"{client_ip}:{'auth' if is_auth_path else 'global'}"
+        if bucket_key not in rate_buckets:
+            # 超出上限时淘汰最早的桶
+            if len(rate_buckets) >= _RATE_BUCKET_MAX:
+                rate_buckets.popitem(last=False)
+            rate_buckets[bucket_key] = []
         q = rate_buckets[bucket_key]
-        while q and (now - q[0]) > window:
-            q.popleft()
+        # 清理过期时间戳
+        cutoff = now - window
+        while q and q[0] < cutoff:
+            q.pop(0)
         if len(q) >= limit:
             return JSONResponse(
                 status_code=429,

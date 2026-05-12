@@ -1,5 +1,7 @@
 """数据同步API路由"""
-from typing import Any, List, Optional
+import time
+import uuid
+from typing import Any, Dict, List, Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from pydantic import BaseModel, Field
@@ -20,6 +22,39 @@ from app.services.data_source_manager import (
 from app.services.data_engine import data_engine_service
 
 router = APIRouter()
+
+# 简单的内存任务进度追踪（生产环境建议用 Redis）
+_task_progress: Dict[str, Dict[str, Any]] = {}
+
+
+def _register_task(task_id: str, description: str) -> None:
+    _task_progress[task_id] = {
+        "task_id": task_id,
+        "status": "in_progress",
+        "progress": 0,
+        "description": description,
+        "message": "任务执行中",
+        "started_at": time.time(),
+        "updated_at": time.time(),
+    }
+
+
+def _update_task(task_id: str, progress: int, message: str = "", status: str = "in_progress") -> None:
+    if task_id in _task_progress:
+        _task_progress[task_id].update({
+            "progress": min(progress, 100),
+            "message": message,
+            "status": status,
+            "updated_at": time.time(),
+        })
+
+
+def _complete_task(task_id: str, message: str = "完成") -> None:
+    _update_task(task_id, 100, message, "completed")
+
+
+def _fail_task(task_id: str, message: str = "失败") -> None:
+    _update_task(task_id, 0, message, "failed")
 async def _invalidate_market_cache() -> dict:
     de_removed = data_engine_service.invalidate_cache("de:quotes:")
     de_overview_removed = data_engine_service.invalidate_cache("de:market_overview:")
@@ -52,18 +87,22 @@ class SyncStatusResponse(BaseModel):
 
 # ============== 后台任务 ==============
 
-async def background_download_task(request: DownloadRequest):
-    """后台下载任务"""
+async def background_download_task(request: DownloadRequest, task_id: str):
+    """后台下载任务（带进度追踪）"""
+    _register_task(task_id, f"下载 {request.market} 数据")
     try:
-        log.info(f"开始后台下载任务: {request.market}")
+        _update_task(task_id, 10, "正在初始化数据源")
+        log.info(f"开始后台下载任务: {request.market} (task_id={task_id})")
         result = await download_market_data(
             market=request.market,
             start_date=request.start_date,
             end_date=request.end_date,
             symbols=request.symbols
         )
+        _complete_task(task_id, f"下载完成: {result}")
         log.info(f"后台下载任务完成: {result}")
     except Exception as e:
+        _fail_task(task_id, f"下载失败: {str(e)[:200]}")
         log.error(f"后台下载任务失败: {e}")
 
 
@@ -94,12 +133,15 @@ async def download_data(
     
     # 对于大批量下载，使用后台任务
     if request.full_sync or (request.symbols and len(request.symbols) > 50):
-        background_tasks.add_task(background_download_task, request)
+        task_id = uuid.uuid4().hex[:12]
+        background_tasks.add_task(background_download_task, request, task_id)
         return DataResponse(data={
             "status": "accepted",
+            "task_id": task_id,
             "message": f"{request.market} 数据下载任务已提交到后台",
             "task_type": "background_download",
-            "estimated_time": "10-30分钟"
+            "estimated_time": "10-30分钟",
+            "progress_url": f"/api/v1/data-sync/download/progress/{task_id}",
         })
     
     # 小批量同步执行
@@ -344,13 +386,15 @@ async def get_download_progress(
     current_user = Depends(get_current_user)
 ) -> Any:
     """获取下载任务进度"""
-    # TODO: 实现任务进度追踪
-    return DataResponse(data={
-        "task_id": task_id,
-        "status": "in_progress",
-        "progress": 0,
-        "message": "任务进度追踪功能开发中"
-    })
+    task = _task_progress.get(task_id)
+    if not task:
+        return DataResponse(data={
+            "task_id": task_id,
+            "status": "not_found",
+            "progress": 0,
+            "message": "未找到该任务",
+        })
+    return DataResponse(data=task)
 
 
 # ============== 标准接口 ==============

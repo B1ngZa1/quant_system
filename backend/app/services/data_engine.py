@@ -30,10 +30,11 @@ MAJOR_A_SHARE_INDICES: Tuple[Tuple[str, str], ...] = (
 
 
 class TTLCache:
-    """轻量级本地 TTL 缓存（线程安全）"""
+    """轻量级本地 TTL 缓存（线程安全，有界 LRU 淘汰）"""
 
-    def __init__(self, default_ttl: int = 30):
+    def __init__(self, default_ttl: int = 30, max_size: int = 512):
         self.default_ttl = default_ttl
+        self.max_size = max_size
         self._store: Dict[str, Tuple[float, Any]] = {}
         self._lock = Lock()
 
@@ -50,6 +51,18 @@ class TTLCache:
 
     def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
         with self._lock:
+            # 超出上限时淘汰已过期和最早的条目
+            if len(self._store) >= self.max_size:
+                now = time.time()
+                # 先清理过期
+                expired = [k for k, (exp, _) in self._store.items() if exp < now]
+                for k in expired:
+                    self._store.pop(k, None)
+                # 仍超限时淘汰最早的 25%
+                if len(self._store) >= self.max_size:
+                    evict_count = max(1, self.max_size // 4)
+                    for k in list(self._store.keys())[:evict_count]:
+                        self._store.pop(k, None)
             timeout = ttl if ttl is not None else self.default_ttl
             self._store[key] = (time.time() + timeout, value)
 
@@ -68,7 +81,7 @@ class SourceHealth:
     def record_success(self, latency_ms: float) -> None:
         self.success_count += 1
         self.healthy = True
-        self.last_ok = datetime.utcnow().isoformat()
+        self.last_ok = datetime.now(timezone.utc).isoformat()
         self.last_error = None
         self.avg_latency_ms = (
             latency_ms
@@ -374,7 +387,7 @@ class DataEngineService:
                 return False
             if mx is None:
                 return False
-            age_min = (datetime.utcnow() - mx).total_seconds() / 60.0
+            age_min = (datetime.now(timezone.utc) - mx).total_seconds() / 60.0
             return age_min <= float(settings.DATA_QUOTES_DB_MAX_AGE_MINUTES)
         except Exception:
             return False
@@ -724,7 +737,7 @@ class DataEngineService:
                 source = "local_daily_panel"
 
         self._current_source = source
-        self._last_update = datetime.utcnow().isoformat()
+        self._last_update = datetime.now(timezone.utc).isoformat()
         payload = self._build_quotes_payload(
             source=source,
             last_update=self._last_update,
@@ -796,7 +809,7 @@ class DataEngineService:
             source = quotes["source"]
             cache_hit = quotes.get("cache_hit", "none")
 
-        self._last_update = datetime.utcnow().isoformat()
+        self._last_update = datetime.now(timezone.utc).isoformat()
         payload = {
             "source": source,
             "last_update": self._last_update,

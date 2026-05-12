@@ -19,44 +19,67 @@ USER_AUTH_LOAD_OPTIONS = (
     noload(User.trades),
 )
 
+# 本地访客用户（无需登录时使用）
+_GUEST_USER: Optional[User] = None
+
+
+def _make_guest_user() -> User:
+    """构造一个内存中的访客 User 对象（不写库）"""
+    u = User.__new__(User)
+    u.id = 0
+    u.username = "local_user"
+    u.email = "local@quant.local"
+    u.full_name = "本地用户"
+    u.is_active = True
+    u.is_superuser = True
+    u.is_verified = True
+    u.phone = None
+    u.avatar = None
+    u.preferences = None
+    u.last_login = None
+    u.login_count = 0
+    u.failed_login_attempts = 0
+    u.locked_until = None
+    return u
+
 
 async def get_current_user(
-    token_payload: dict = Depends(verify_token),
-    db: AsyncSession = Depends(get_db)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer),
+    db: AsyncSession = Depends(get_db),
 ) -> User:
-    """获取当前用户"""
-    user_id = token_payload.get("sub")
+    """获取当前用户（无 token 时返回本地访客用户）"""
+    if not credentials:
+        return _get_or_create_guest()
+
+    token = credentials.credentials
+    payload = decode_token(token)
+    if not payload:
+        return _get_or_create_guest()
+
+    user_id = payload.get("sub")
     if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证信息"
-        )
+        return _get_or_create_guest()
     try:
         user_id = int(user_id)
     except (TypeError, ValueError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的用户标识",
-        )
-    
+        return _get_or_create_guest()
+
     result = await db.execute(
         select(User).options(*USER_AUTH_LOAD_OPTIONS).where(User.id == user_id)
     )
     user = result.scalar_one_or_none()
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="用户不存在"
-        )
-    
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="用户已被禁用"
-        )
-    
+
+    if not user or not user.is_active:
+        return _get_or_create_guest()
+
     return user
+
+
+def _get_or_create_guest() -> User:
+    global _GUEST_USER
+    if _GUEST_USER is None:
+        _GUEST_USER = _make_guest_user()
+    return _GUEST_USER
 
 
 async def get_current_active_user(
@@ -69,7 +92,7 @@ async def get_current_active_user(
 async def get_current_superuser(
     current_user: User = Depends(get_current_user)
 ) -> User:
-    """获取当前超级用户"""
+    """获取当前超级用户（访客默认视为超级用户）"""
     if not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -103,13 +126,13 @@ async def optional_current_user(
     """可选的当前用户验证"""
     if not credentials:
         return None
-    
+
     token = credentials.credentials
     payload = decode_token(token)
-    
+
     if not payload:
         return None
-    
+
     user_id = payload.get("sub")
     if not user_id:
         return None
@@ -117,13 +140,13 @@ async def optional_current_user(
         user_id = int(user_id)
     except (TypeError, ValueError):
         return None
-    
+
     result = await db.execute(
         select(User).options(*USER_AUTH_LOAD_OPTIONS).where(User.id == user_id)
     )
     user = result.scalar_one_or_none()
-    
+
     if not user or not user.is_active:
         return None
-    
+
     return user

@@ -1,5 +1,7 @@
 """数据库会话管理"""
 from typing import AsyncGenerator
+
+from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
@@ -38,6 +40,20 @@ else:
     )
 
 engine = create_async_engine(database_url, **engine_kwargs)
+
+# SQLite 性能优化：WAL 模式 + 同步级别 + 外键约束
+if database_url.startswith("sqlite"):
+
+    @event.listens_for(engine.sync_engine, "connect")
+    def _set_sqlite_pragma(dbapi_conn, connection_record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.execute("PRAGMA cache_size=-64000")  # 64MB
+        cursor.execute("PRAGMA temp_store=MEMORY")
+        cursor.execute("PRAGMA mmap_size=268435456")  # 256MB
+        cursor.close()
 
 # 创建异步会话工厂
 AsyncSessionLocal = sessionmaker(

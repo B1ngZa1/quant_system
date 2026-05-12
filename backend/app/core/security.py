@@ -1,14 +1,14 @@
 """安全与认证模块"""
 
 import logging
-import pickle
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import uuid4
 
 import bcrypt
 import redis
+from redis.connection import ConnectionPool
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
@@ -27,19 +27,20 @@ _revoked_jti_lock = threading.Lock()
 
 REDIS_BLACKLIST_PREFIX = "token:revoked:"
 _redis_blacklist_available = False
+_sync_redis_pool: Optional[ConnectionPool] = None
 _sync_redis_client: Optional[redis.Redis] = None
 _sync_redis_lock = threading.Lock()
 
 
 def _get_sync_redis_client() -> Optional[redis.Redis]:
-    global _sync_redis_client
+    global _sync_redis_client, _sync_redis_pool
     if _sync_redis_client is not None:
         return _sync_redis_client
     with _sync_redis_lock:
         if _sync_redis_client is not None:
             return _sync_redis_client
         try:
-            _sync_redis_client = redis.Redis(
+            _sync_redis_pool = ConnectionPool(
                 host=settings.REDIS_HOST,
                 port=settings.REDIS_PORT,
                 db=settings.REDIS_DB,
@@ -47,9 +48,11 @@ def _get_sync_redis_client() -> Optional[redis.Redis]:
                 decode_responses=False,
                 socket_timeout=1.0,
                 socket_connect_timeout=1.0,
+                max_connections=5,
             )
+            _sync_redis_client = redis.Redis(connection_pool=_sync_redis_pool)
             _sync_redis_client.ping()
-            log.info("Sync Redis client connected successfully")
+            log.info("Sync Redis client connected successfully (pooled)")
             return _sync_redis_client
         except Exception as e:
             log.warning(f"Sync Redis client connection failed: {e}")
@@ -84,7 +87,7 @@ def _add_token_to_redis_sync(jti: str, ttl_seconds: int) -> bool:
         return False
     try:
         key = f"{REDIS_BLACKLIST_PREFIX}{jti}"
-        client.setex(key, ttl_seconds, pickle.dumps(True))
+        client.setex(key, ttl_seconds, b"1")
         return True
     except Exception as e:
         log.error(f"Redis setex failed: {e}")
@@ -118,12 +121,12 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     if "sub" in to_encode and to_encode["sub"] is not None:
         to_encode["sub"] = str(to_encode["sub"])
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode.update(
-        {"exp": expire, "type": "access", "iat": datetime.utcnow(), "jti": uuid4().hex}
+        {"exp": expire, "type": "access", "iat": datetime.now(timezone.utc), "jti": uuid4().hex}
     )
 
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
@@ -135,10 +138,10 @@ def create_refresh_token(data: dict) -> str:
     to_encode = data.copy()
     if "sub" in to_encode and to_encode["sub"] is not None:
         to_encode["sub"] = str(to_encode["sub"])
-    expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
     to_encode.update(
-        {"exp": expire, "type": "refresh", "iat": datetime.utcnow(), "jti": uuid4().hex}
+        {"exp": expire, "type": "refresh", "iat": datetime.now(timezone.utc), "jti": uuid4().hex}
     )
 
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
@@ -155,7 +158,7 @@ def decode_token(token: str) -> Optional[dict]:
 
 
 def _cleanup_revoked_tokens(now: Optional[datetime] = None) -> None:
-    current = now or datetime.utcnow()
+    current = now or datetime.now(timezone.utc)
     with _revoked_jti_lock:
         expired = [jti for jti, exp in _revoked_jti_store.items() if exp <= current]
         for jti in expired:
@@ -171,8 +174,8 @@ def revoke_token(token: str) -> None:
     exp = payload.get("exp")
     if not jti or exp is None:
         return
-    expire_at = datetime.utcfromtimestamp(exp)
-    ttl_seconds = int(exp - datetime.utcnow().timestamp())
+    expire_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+    ttl_seconds = int(exp - datetime.now(timezone.utc).timestamp())
     if ttl_seconds <= 0:
         return
 
@@ -215,14 +218,14 @@ def is_token_revoked(payload: Optional[dict]) -> bool:
             expire_at = _revoked_jti_store.get(str(jti))
         if not expire_at:
             return False
-        return expire_at > datetime.utcnow()
+        return expire_at > datetime.now(timezone.utc)
 
     _cleanup_revoked_tokens()
     with _revoked_jti_lock:
         expire_at = _revoked_jti_store.get(str(jti))
     if not expire_at:
         return False
-    return expire_at > datetime.utcnow()
+    return expire_at > datetime.now(timezone.utc)
 
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security_bearer)) -> dict:

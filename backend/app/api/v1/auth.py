@@ -1,6 +1,4 @@
 """认证API"""
-import json
-import time
 from datetime import timedelta
 from typing import Any, Optional
 
@@ -38,28 +36,6 @@ from app.schemas.base import DataResponse, ListResponse, SuccessResponse
 router = APIRouter()
 
 
-def _debug_log(hypothesis_id: str, location: str, message: str, data: dict[str, Any]) -> None:
-    # #region agent log
-    try:
-        with open(r"c:\University\Code_total\quant_system\.cursor\debug.log", "a", encoding="utf-8") as f:
-            f.write(
-                json.dumps(
-                    {
-                        "runId": "baseline",
-                        "hypothesisId": hypothesis_id,
-                        "location": location,
-                        "message": message,
-                        "data": data,
-                        "timestamp": int(time.time() * 1000),
-                    },
-                    ensure_ascii=False,
-                )
-                + "\n"
-            )
-    except Exception:
-        pass
-    # #endregion
-
 def _audit_logout_detail(*args: Any, **kwargs: Any) -> dict[str, Any]:
     payload = kwargs.get("payload")
     credentials = kwargs.get("credentials")
@@ -87,22 +63,24 @@ async def register(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """用户注册"""
-    # 检查用户名是否已存在
+    # 检查用户名/邮箱是否已存在（仅查 id，避免加载完整实体及关系）
     result = await db.execute(
-        select(User).options(*USER_AUTH_LOAD_OPTIONS).where(User.username == user_data.username)
-    )
-    if result.scalar_one_or_none():
-        raise BusinessException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code=ErrorCode.BUSINESS_ERROR,
-            message="用户名已存在",
+        select(User.id).where(
+            (User.username == user_data.username) | (User.email == user_data.email)
         )
-    
-    # 检查邮箱是否已存在
-    result = await db.execute(
-        select(User).options(*USER_AUTH_LOAD_OPTIONS).where(User.email == user_data.email)
     )
-    if result.scalar_one_or_none():
+    existing_id = result.scalar_one_or_none()
+    if existing_id is not None:
+        # 二次判断具体是哪个字段冲突
+        result = await db.execute(
+            select(User.username).where(User.username == user_data.username)
+        )
+        if result.scalar_one_or_none():
+            raise BusinessException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code=ErrorCode.BUSINESS_ERROR,
+                message="用户名已存在",
+            )
         raise BusinessException(
             status_code=status.HTTP_400_BAD_REQUEST,
             code=ErrorCode.BUSINESS_ERROR,
@@ -166,10 +144,11 @@ async def login(
         )
     
     # 更新登录信息
-    from datetime import datetime
-    user.last_login = datetime.utcnow()
+    from datetime import datetime, timezone
+    user.last_login = datetime.now(timezone.utc)
     user.login_count += 1
     await db.commit()
+    await db.refresh(user)
     
     # 生成令牌
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -197,11 +176,9 @@ async def refresh_token(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """刷新访问令牌"""
-    _debug_log("H2", "backend/app/api/v1/auth.py:refresh_token:entry", "Refresh token endpoint called", {"hasRefreshToken": bool(payload.refresh_token)})
     old_refresh_token = payload.refresh_token
     payload = verify_refresh_token(old_refresh_token)
     if not payload:
-        _debug_log("H2", "backend/app/api/v1/auth.py:refresh_token:invalid", "Refresh token validation failed", {"tokenValid": False})
         raise BusinessException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             code=ErrorCode.INVALID_TOKEN,
@@ -217,7 +194,6 @@ async def refresh_token(
     user = result.scalar_one_or_none()
     
     if not user or not user.is_active:
-        _debug_log("H2", "backend/app/api/v1/auth.py:refresh_token:user-invalid", "Refresh token user invalid", {"userFound": bool(user), "isActive": bool(user.is_active) if user else False})
         raise BusinessException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             code=ErrorCode.UNAUTHORIZED,
@@ -233,8 +209,7 @@ async def refresh_token(
     # refresh token 轮换：每次刷新都签发新 refresh 并吊销旧 refresh
     new_refresh_token = create_refresh_token(data={"sub": user.id})
     revoke_token(old_refresh_token)
-    _debug_log("H2", "backend/app/api/v1/auth.py:refresh_token:success", "Refresh token rotated", {"userId": user.id})
-    
+
     return DataResponse(
         data=Token(
             access_token=access_token,
@@ -313,7 +288,13 @@ async def update_item(payload: RefreshTokenRequest, db: AsyncSession = Depends(g
 async def remove_item(
     payload: LogoutRequest,
     current_user: User = Depends(get_current_user),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer),
 ) -> Any:
     """标准化接口：退出登录。"""
-    await logout(payload, current_user)
+    if credentials and credentials.credentials:
+        token_payload = decode_token(credentials.credentials)
+        if token_payload:
+            revoke_token(credentials.credentials)
+    if payload.refresh_token:
+        revoke_token(payload.refresh_token)
     return SuccessResponse(message="已退出登录")

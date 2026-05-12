@@ -117,20 +117,24 @@
       </template>
     </el-drawer>
 
-    <el-dialog v-model="resultVisible" title="回测结果" width="640px">
+    <el-dialog v-model="resultVisible" title="回测结果" width="780px">
       <div v-if="resultLoading" class="center-pad">加载中…</div>
       <template v-else-if="resultPayload">
-        <el-descriptions :column="2" border class="mb-3">
+        <el-descriptions :column="3" border class="mb-3">
           <el-descriptions-item label="总收益率">
-            {{ resultPayload.metrics?.total_return != null ? `${Number(resultPayload.metrics.total_return).toFixed(2)}%` : '-' }}
+            <span :class="getChangeClass(resultPayload.metrics?.total_return)">
+              {{ formatMetricPct(resultPayload.metrics?.total_return) }}
+            </span>
           </el-descriptions-item>
           <el-descriptions-item label="年化">
-            {{ resultPayload.metrics?.annual_return != null ? `${Number(resultPayload.metrics.annual_return).toFixed(2)}%` : '-' }}
+            <span :class="getChangeClass(resultPayload.metrics?.annual_return)">
+              {{ formatMetricPct(resultPayload.metrics?.annual_return) }}
+            </span>
           </el-descriptions-item>
           <el-descriptions-item label="最大回撤">
-            {{ resultPayload.metrics?.max_drawdown != null ? `${Number(resultPayload.metrics.max_drawdown).toFixed(2)}%` : '-' }}
+            <span class="down">{{ formatMetricPct(resultPayload.metrics?.max_drawdown) }}</span>
           </el-descriptions-item>
-          <el-descriptions-item label="夏普">
+          <el-descriptions-item label="夏普比率">
             {{ resultPayload.metrics?.sharpe_ratio != null ? Number(resultPayload.metrics.sharpe_ratio).toFixed(2) : '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="胜率">
@@ -138,6 +142,12 @@
           </el-descriptions-item>
           <el-descriptions-item label="交易次数">{{ resultPayload.metrics?.total_trades ?? '-' }}</el-descriptions-item>
         </el-descriptions>
+        <BacktestEquityCurve
+          v-if="resultPayload.equity_curve?.length"
+          :data="resultPayload.equity_curve"
+          :height="280"
+          class="mb-3"
+        />
         <p class="muted">数据来自真实行情链路（数据库 / AKShare / 本地 CSV），与「新建回测」中「真实数据」开关一致。</p>
       </template>
       <div v-else class="center-pad muted">暂无结果</div>
@@ -149,6 +159,7 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import BacktestEquityCurve from '@/components/charts/BacktestEquityCurve.vue'
 import {
   getBacktestList,
   createBacktest,
@@ -214,6 +225,21 @@ const formatPct = (v: any) => {
   const n = Number(v)
   if (Number.isNaN(n)) return '-'
   return `${(n * 100).toFixed(2)}%`
+}
+
+const formatMetricPct = (v: any) => {
+  if (v == null || v === undefined) return '-'
+  const n = Number(v)
+  if (Number.isNaN(n)) return '-'
+  return `${n.toFixed(2)}%`
+}
+
+const getChangeClass = (v: any) => {
+  if (v == null) return ''
+  const n = Number(v)
+  if (n > 0) return 'up'
+  if (n < 0) return 'down'
+  return ''
 }
 
 const fetchList = async () => {

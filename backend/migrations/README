@@ -1,9 +1,0 @@
-数据库迁移脚本目录
-
-由 Alembic 自动生成和管理。
-
-主要命令:
-- alembic revision --autogenerate -m "描述"  # 创建迁移
-- alembic upgrade head                        # 升级到最新
-- alembic downgrade -1                        # 降级一个版本
-- alembic history                             # 查看历史

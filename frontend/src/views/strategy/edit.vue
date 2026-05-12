@@ -196,14 +196,27 @@ const rules: FormRules = {
   strategy_type: [{ required: true, message: '请选择策略类型', trigger: 'change' }]
 }
 
-const stockOptions = ref([
-  { value: '000001', label: '000001 平安银行' },
-  { value: '000002', label: '000002 万科A' },
-  { value: '600000', label: '600000 浦发银行' },
-  { value: '600036', label: '600036 招商银行' },
-  { value: '000858', label: '000858 五粮液' },
-  { value: '002415', label: '002415 海康威视' }
-])
+const stockOptions = ref<Array<{ value: string; label: string }>>([])
+
+async function loadStockOptions() {
+  try {
+    const { getStockList } = await import('@/api/stock')
+    const res = await getStockList({ page: 1, page_size: 100 }) as any
+    const rows = res?.data || []
+    stockOptions.value = rows.map((r: any) => ({
+      value: r.symbol,
+      label: `${r.symbol} ${r.name}`,
+    }))
+  } catch {
+    stockOptions.value = [
+      { value: '000001', label: '000001 平安银行' },
+      { value: '600519', label: '600519 贵州茅台' },
+      { value: '300750', label: '300750 宁德时代' },
+    ]
+  }
+}
+
+loadStockOptions()
 
 const parameters = ref<{ name: string; value: string; type: string }[]>([])
 
@@ -293,12 +306,25 @@ const askAI = async () => {
     return
   }
   aiLoading.value = true
-  // 模拟AI响应
-  setTimeout(() => {
-    form.code = `# AI生成的策略代码\n# 需求: ${aiPrompt.value}\n\ndef initialize(context):\n    context.symbols = ['000001', '000002']\n    set_commission(0.0003)\n\ndef handle_data(context, data):\n    for symbol in context.symbols:\n        # 获取历史数据\n        hist = data.history(symbol, 'close', 20, '1d')\n        if len(hist) < 20:\n            continue\n        \n        # 计算指标\n        ma20 = hist.mean()\n        current_price = data.current(symbol, 'close')\n        \n        # 交易逻辑\n        if current_price > ma20:\n            order_target_percent(symbol, 0.2)\n        else:\n            order_target_percent(symbol, 0)`
+  try {
+    const { suggestStrategy } = await import('@/api/ai')
+    const res = await suggestStrategy({
+      strategy_type: form.strategy_type,
+      description: aiPrompt.value,
+      symbols: form.symbols,
+    }) as any
+    const code = res?.data?.code || res?.data?.strategy_code || res?.data?.suggestion || ''
+    if (code) {
+      form.code = code
+    } else {
+      form.code = `# AI 建议\n# 需求: ${aiPrompt.value}\n# 请根据 AI 返回结果手动调整策略代码\n\ndef initialize(context):\n    pass\n\ndef handle_data(context, data):\n    pass`
+    }
+  } catch {
+    form.code = `# AI 生成失败，请手动编写\n# 需求: ${aiPrompt.value}\n\ndef initialize(context):\n    pass\n\ndef handle_data(context, data):\n    pass`
+  } finally {
     aiLoading.value = false
     ElMessage.success('AI策略建议已生成')
-  }, 1500)
+  }
 }
 
 const handleSubmit = async () => {

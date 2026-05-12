@@ -2,7 +2,7 @@
 import asyncio
 import os
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -81,7 +81,7 @@ async def seed_stocks(session):
                 change_pct=Decimal("1.01"),
                 volume=1000000,
                 amount=Decimal("100000000"),
-                update_time=datetime.utcnow(),
+                update_time=datetime.now(timezone.utc),
             )
         )
 
@@ -172,8 +172,8 @@ async def seed_strategy_trade_backtest(session, admin: User):
                 is_simulated=True,
                 portfolio_id=portfolio.id,
                 user_id=admin.id,
-                submitted_at=datetime.utcnow(),
-                executed_at=datetime.utcnow(),
+                submitted_at=datetime.now(timezone.utc),
+                executed_at=datetime.now(timezone.utc),
             )
         )
 

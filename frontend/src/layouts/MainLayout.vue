@@ -99,15 +99,19 @@
           </div>
         </div>
         <div class="header-right">
+          <button class="header-btn header-btn--palette" @click="showPalette = true" title="命令面板 (Ctrl+K)">
+            <el-icon><Search /></el-icon>
+            <kbd class="header-kbd">⌘K</kbd>
+          </button>
           <div class="session-badge">
             <span class="session-badge__dot"></span>
             <span>{{ isDark ? '深色终端' : '浅色终端' }}</span>
           </div>
-          <button class="header-btn" @click="toggleTheme">
+          <button class="header-btn" @click="toggleTheme" title="切换主题 (T)">
             <el-icon><Moon v-if="!isDark" /><Sunny v-else /></el-icon>
           </button>
-          <button class="header-btn header-btn--danger" @click="handleLogout">
-            <el-icon><SwitchButton /></el-icon>
+          <button class="header-btn" @click="$router.push('/user')">
+            <el-icon><UserFilled /></el-icon>
           </button>
         </div>
       </header>
@@ -115,56 +119,68 @@
       <div class="content-wrapper">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
-            <component :is="Component" />
+            <ErrorBoundary :key="$route.fullPath">
+              <component :is="Component" />
+            </ErrorBoundary>
           </transition>
         </router-view>
       </div>
     </main>
+
+    <CommandPalette :visible="showPalette" :items="commandItems" @close="showPalette = false" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessageBox } from 'element-plus'
 import { useAppStore } from '@/store/modules/app'
-import { useUserStore } from '@/store/modules/user'
 import Breadcrumb from './components/Breadcrumb.vue'
+import CommandPalette, { type CommandItem } from '@/components/ui/CommandPalette.vue'
+import ErrorBoundary from '@/components/ui/ErrorBoundary.vue'
+import { useHotkeys } from '@/composables/useHotkeys'
 import {
   Fold, Expand, HomeFilled, TrendCharts, DataAnalysis,
-  Timer, DataLine, Setting, UserFilled, Moon, Sunny, SwitchButton, Monitor
+  Timer, DataLine, Setting, UserFilled, Moon, Sunny, Monitor,
+  Odometer, Histogram, Money, Coin, MagicStick, Calendar, Search
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const appStore = useAppStore()
-const userStore = useUserStore()
 
 const isCollapsed = computed(() => appStore.sidebarCollapsed)
 const isDark = computed(() => appStore.isDark)
-const userInfo = computed(() => userStore.userInfo)
+const showPalette = ref(false)
 
-const toggleSidebar = () => {
-  appStore.toggleSidebar()
-}
+const userInfo = computed(() => ({
+  username: '本地用户',
+  role: '研究成员',
+  avatar: undefined as string | undefined,
+}))
 
-const toggleTheme = () => {
-  appStore.toggleTheme()
-}
+const commandItems: CommandItem[] = [
+  { id: 'dashboard', label: '驾驶舱', icon: Odometer, category: '导航', action: () => router.push('/dashboard') },
+  { id: 'market', label: '行情中心', icon: TrendCharts, category: '导航', action: () => router.push('/market') },
+  { id: 'strategy', label: '因子策略', icon: DataAnalysis, category: '导航', action: () => router.push('/strategy') },
+  { id: 'backtest', label: '策略回测', icon: Histogram, category: '导航', action: () => router.push('/backtest') },
+  { id: 'trading', label: '交易观察', icon: Money, category: '导航', action: () => router.push('/trading') },
+  { id: 'data', label: '数据工作台', icon: Coin, category: '导航', action: () => router.push('/data') },
+  { id: 'ai', label: 'AI 策略助手', icon: MagicStick, category: '导航', action: () => router.push('/ai/assistant') },
+  { id: 'event', label: '事件分析', icon: Calendar, category: '导航', action: () => router.push('/event') },
+  { id: 'settings', label: '系统设置', icon: Setting, category: '导航', action: () => router.push('/settings') },
+  { id: 'theme', label: '切换主题', icon: Moon, category: '操作', shortcut: 'T', action: () => appStore.toggleTheme() },
+  { id: 'collapse', label: '折叠侧边栏', icon: Fold, category: '操作', shortcut: 'B', action: () => appStore.toggleSidebar() },
+]
 
-const goToProfile = () => {
-  router.push('/user')
-}
+useHotkeys([
+  { key: 'k', ctrl: true, handler: () => { showPalette.value = !showPalette.value }, description: '命令面板' },
+  { key: 'b', handler: () => appStore.toggleSidebar(), description: '折叠侧边栏' },
+  { key: 't', handler: () => appStore.toggleTheme(), description: '切换主题' },
+])
 
-const handleLogout = () => {
-  ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
-    await userStore.logout()
-    router.push('/login')
-  })
-}
+const toggleSidebar = () => { appStore.toggleSidebar() }
+const toggleTheme = () => { appStore.toggleTheme() }
+const goToProfile = () => {}
 </script>
 
 <style lang="scss" scoped>
@@ -407,6 +423,22 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.header-btn--palette {
+  gap: 6px;
+  padding: 0 12px;
+  width: auto;
+
+  .header-kbd {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--line-soft);
+    color: var(--text-muted);
+    font-family: inherit;
+  }
 }
 
 .session-badge {

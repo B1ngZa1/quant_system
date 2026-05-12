@@ -787,7 +787,7 @@ class DataSourceManager:
                 source.check_health(),
                 timeout=self._source_timeout_seconds
             )
-            source.health.last_check = datetime.utcnow()
+            source.health.last_check = datetime.now(timezone.utc)
             if healthy:
                 self._record_source_success(source.name)
             log.debug(f"数据源 {source.name} 健康状态: {healthy}")
@@ -916,7 +916,7 @@ class DataSourceManager:
         """从缓存获取"""
         if key in self._cache:
             timestamp, data = self._cache[key]
-            if (datetime.utcnow() - timestamp).seconds < self._cache_ttl:
+            if (datetime.now(timezone.utc) - timestamp).seconds < self._cache_ttl:
                 return data
             else:
                 del self._cache[key]
@@ -924,7 +924,7 @@ class DataSourceManager:
     
     def _set_cache(self, key: str, data: pd.DataFrame):
         """设置缓存"""
-        self._cache[key] = (datetime.utcnow(), data)
+        self._cache[key] = (datetime.now(timezone.utc), data)
 
     def clear_cache(self, prefix: Optional[str] = None) -> int:
         """按前缀清理内存缓存，返回清理数量。"""
@@ -953,7 +953,7 @@ class DataSourceManager:
                 }
                 for s in self._sources.values()
             ],
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     
     async def fetch_all_stocks(

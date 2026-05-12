@@ -8,10 +8,11 @@ from app.domain.entities.kline import Kline
 from app.domain.value_objects.interval import KlineInterval
 from app.api.v1.market import get_market_repository
 
-# 替换依赖，注入测试数据
-def override_get_market_repository():
+
+@pytest.fixture(autouse=True)
+def _setup_mock_repo():
+    """Set up mock market repository for all tests in this module."""
     repo = MockMarketRepository()
-    # 注入假数据
     kline1 = Kline(
         symbol="AAPL",
         interval=KlineInterval.DAY_1,
@@ -21,13 +22,13 @@ def override_get_market_repository():
         low_price=90.0,
         close_price=105.0,
         volume=1000.0,
-        amount=100000.0
+        amount=100000.0,
     )
-    # 因为是个异步的方法但是我们在同步块里，我们可以在内部改它的 _klines 列表
     repo._klines.append(kline1)
-    return repo
+    app.dependency_overrides[get_market_repository] = lambda: repo
+    yield
+    app.dependency_overrides.pop(get_market_repository, None)
 
-app.dependency_overrides[get_market_repository] = override_get_market_repository
 
 @pytest.mark.asyncio
 async def test_api_fetch_klines():
@@ -38,14 +39,15 @@ async def test_api_fetch_klines():
             params={
                 "interval": "1d",
                 "start_time": "2022-12-31T00:00:00Z",
-                "end_time": "2023-01-02T00:00:00Z"
-            }
+                "end_time": "2023-01-02T00:00:00Z",
+            },
         )
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 1
         assert data[0]["open_price"] == 100.0
         assert data[0]["is_bullish"] is True
+
 
 @pytest.mark.asyncio
 async def test_api_fetch_klines_invalid_stock():
@@ -56,10 +58,9 @@ async def test_api_fetch_klines_invalid_stock():
             params={
                 "interval": "1d",
                 "start_time": "2022-12-31T00:00:00Z",
-                "end_time": "2023-01-02T00:00:00Z"
-            }
+                "end_time": "2023-01-02T00:00:00Z",
+            },
         )
-        # 这里会触发 HTTPException
         assert response.status_code == 400
         data = response.json()
         assert "not found" in data["message"]

@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => ({
       : null
   ],
   test: {
-    environment: 'node',
+    environment: 'jsdom',
     include: ['src/**/*.spec.ts'],
     globals: false
   },

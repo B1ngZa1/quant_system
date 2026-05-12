@@ -5,13 +5,13 @@ from app.models.indicator import IndicatorDaily
 from app.models.strategy import Strategy
 from app.models.backtest import Backtest
 from app.models.trade import Trade, Portfolio, Position, PortfolioPerformance
-from app.models.market import MarketSentiment, News, FundFlow
+from app.models.market import MarketSentiment, News, FundFlow, NewsSymbol
 from app.models.audit_log import AuditLog
 
 __all__ = [
     "User",
     "StockBasic",
-    "StockData", 
+    "StockData",
     "StockRealtime",
     "KlineSyncState",
     "PreloadConfig",
@@ -27,5 +27,6 @@ __all__ = [
     "MarketSentiment",
     "News",
     "FundFlow",
+    "NewsSymbol",
     "AuditLog",
 ]

@@ -23,7 +23,7 @@ class NewsService:
 
     def _normalize_time(self, value: Any) -> str:
         if value is None:
-            return datetime.utcnow().isoformat()
+            return datetime.now(timezone.utc).isoformat()
         try:
             if hasattr(value, "to_pydatetime"):
                 return value.to_pydatetime().isoformat()
@@ -31,11 +31,11 @@ class NewsService:
                 return value.isoformat()
             text = str(value).strip()
             if not text:
-                return datetime.utcnow().isoformat()
+                return datetime.now(timezone.utc).isoformat()
             # Tushare 常见格式：2026-04-20 09:30:00
             return datetime.fromisoformat(text.replace(" ", "T")).isoformat()
         except Exception:
-            return datetime.utcnow().isoformat()
+            return datetime.now(timezone.utc).isoformat()
 
     def _news_file_path(self) -> Path:
         today = datetime.now().strftime("%Y%m%d")
@@ -92,7 +92,7 @@ class NewsService:
         """将新闻写入本地 JSON 文件。"""
         file_path = self._news_file_path()
         payload = {
-            "updated_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
             "total": len(news_items),
             "items": news_items,
         }

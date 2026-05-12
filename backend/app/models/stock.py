@@ -1,5 +1,5 @@
 """股票数据模型"""
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional
 from decimal import Decimal
 from sqlalchemy import String, Date, DateTime, Numeric, BigInteger, Text, Index, Integer
@@ -108,13 +108,7 @@ class StockData(Base):
     
     # 复权因子
     adj_factor: Mapped[Optional[Decimal]] = mapped_column(Numeric(20, 8), default=1, nullable=True)
-    
-    # 技术指标（可选）
-    ma5: Mapped[Optional[Decimal]] = mapped_column(Numeric(20, 4), nullable=True)
-    ma10: Mapped[Optional[Decimal]] = mapped_column(Numeric(20, 4), nullable=True)
-    ma20: Mapped[Optional[Decimal]] = mapped_column(Numeric(20, 4), nullable=True)
-    ma60: Mapped[Optional[Decimal]] = mapped_column(Numeric(20, 4), nullable=True)
-    
+
     # 创建联合索引
     __table_args__ = (
         Index("ix_stock_data_symbol_date", "symbol", "trade_date", unique=True),
@@ -162,7 +156,7 @@ class StockRealtime(Base):
     market_cap: Mapped[Optional[Decimal]] = mapped_column(Numeric(20, 4), nullable=True)
     
     # 更新时间
-    update_time: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    update_time: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     __table_args__ = (
         # MAX(update_time)、按新鲜度筛选

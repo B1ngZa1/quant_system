@@ -1,6 +1,4 @@
 """数据引擎状态与行情接口"""
-import json
-import time
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -15,29 +13,6 @@ from app.services.local_market_data import list_local_dataset_files, local_data_
 
 router = APIRouter()
 data_provider: DataProvider = data_engine_service
-
-
-def _debug_log(hypothesis_id: str, location: str, message: str, data: dict[str, Any]) -> None:
-    # #region agent log
-    try:
-        with open(r"c:\University\Code_total\quant_system\.cursor\debug.log", "a", encoding="utf-8") as f:
-            f.write(
-                json.dumps(
-                    {
-                        "runId": "baseline",
-                        "hypothesisId": hypothesis_id,
-                        "location": location,
-                        "message": message,
-                        "data": data,
-                        "timestamp": int(time.time() * 1000),
-                    },
-                    ensure_ascii=False,
-                )
-                + "\n"
-            )
-    except Exception:
-        pass
-    # #endregion
 
 
 def _parse_fields_param(fields: Optional[str]) -> Optional[list[str]]:
@@ -64,12 +39,6 @@ async def get_quotes(
     cache: RedisCache = Depends(get_cache),
 ) -> Any:
     """获取聚合行情（主/备/兜底自动切换）"""
-    _debug_log(
-        "H4",
-        "backend/app/api/v1/data.py:get_quotes:entry",
-        "Data quotes request received",
-        {"page": page, "pageSize": page_size, "hasSearch": bool(search), "fieldProfile": field_profile, "sortBy": sort_by},
-    )
     payload = await data_provider.get_quotes(
         page=page,
         page_size=page_size,
@@ -82,12 +51,6 @@ async def get_quotes(
         field_profile=field_profile,
         sort_by=sort_by,
         sort_order=sort_order,
-    )
-    _debug_log(
-        "H4",
-        "backend/app/api/v1/data.py:get_quotes:exit",
-        "Data quotes response built",
-        {"rowsCount": len(payload.get("rows", []) if isinstance(payload, dict) else []), "hasSource": bool(payload.get("source")) if isinstance(payload, dict) else False},
     )
     return DataResponse(data=payload)
 

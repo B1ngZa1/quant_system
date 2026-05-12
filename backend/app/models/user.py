@@ -33,11 +33,11 @@ class User(Base):
     failed_login_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     locked_until: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
-    # 关联关系
-    strategies: Mapped[List[Any]] = relationship("Strategy", back_populates="user", lazy="selectin")
-    portfolios: Mapped[List[Any]] = relationship("Portfolio", back_populates="user", lazy="selectin")
-    backtests: Mapped[List[Any]] = relationship("Backtest", back_populates="user", lazy="selectin")
-    trades: Mapped[List[Any]] = relationship("Trade", back_populates="user", lazy="selectin")
+    # 关联关系（使用 lazy 避免每次查询用户时全量加载关联记录）
+    strategies: Mapped[List[Any]] = relationship("Strategy", back_populates="user", lazy="noload")
+    portfolios: Mapped[List[Any]] = relationship("Portfolio", back_populates="user", lazy="noload")
+    backtests: Mapped[List[Any]] = relationship("Backtest", back_populates="user", lazy="noload")
+    trades: Mapped[List[Any]] = relationship("Trade", back_populates="user", lazy="noload")
     
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"

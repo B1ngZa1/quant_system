@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/store/modules/user'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import { appConfig } from '@/config/app'
@@ -7,8 +6,6 @@ import { appConfig } from '@/config/app'
 // 配置NProgress
 NProgress.configure({ showSpinner: false })
 
-const loadLoginView = () => import('@/views/login/index.vue')
-const loadRegisterView = () => import('@/views/login/register.vue')
 const loadMainLayout = () => import('@/layouts/MainLayout.vue')
 const loadDashboardView = () => import('@/views/dashboard/index.vue')
 const loadMarketView = () => import('@/views/market/index.vue')
@@ -39,20 +36,8 @@ const prefetchRouteLoaders = (loaders: AsyncLoader[]) => {
   })
 }
 
-// 路由配置
+// 路由配置（无需登录，直接进入系统）
 export const routes = [
-  {
-    path: '/login',
-    name: 'Login',
-    component: loadLoginView,
-    meta: { public: true, title: '登录' }
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: loadRegisterView,
-    meta: { public: true, title: '注册' }
-  },
   {
     path: '/',
     name: 'Layout',
@@ -189,48 +174,14 @@ const router = createRouter({
   }
 })
 
-// 路由守卫
+// 路由守卫（无需登录验证，直接放行）
 router.beforeEach(async (to, _from, next) => {
   NProgress.start()
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/678835f6-0f08-447a-8a27-257c5fa184e3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'baseline',hypothesisId:'H3',location:'frontend/src/router/index.ts:beforeEach',message:'Route guard entered',data:{toPath:to.path,isPublic:Boolean(to.meta.public)},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
-  
+
   // 设置页面标题
   document.title = to.meta.title ? `${to.meta.title} - Quant System` : 'Quant Trading System'
-  
-  const userStore = useUserStore()
-  
-  // 公开页面直接放行
-  if (to.meta.public) {
-    if (userStore.token && (to.path === '/login' || to.path === '/register')) {
-      next('/dashboard')
-      return
-    }
-    next()
-    return
-  }
-  
-  // 检查登录状态
-  if (!userStore.token) {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/678835f6-0f08-447a-8a27-257c5fa184e3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'baseline',hypothesisId:'H3',location:'frontend/src/router/index.ts:missing-token',message:'Route guard redirect due to missing token',data:{toPath:to.path},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    next('/login')
-    return
-  }
-  
-  // 获取用户信息
-  if (!userStore.userInfo) {
-    try {
-      await userStore.fetchUserInfo()
-    } catch {
-      await userStore.logout(true)
-      next('/login')
-      return
-    }
-  }
-  
+
+  // 所有页面直接放行，无需登录
   next()
 })
 

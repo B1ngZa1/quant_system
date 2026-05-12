@@ -626,8 +626,8 @@ const handleSubmit = async () => {
   }
 }
 
-// 深色模式
-@media (prefers-color-scheme: dark) {
+// 深色模式（跟随应用主题系统 html.dark）
+html.dark & {
   .brand-section {
     background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #1f2937 100%);
 

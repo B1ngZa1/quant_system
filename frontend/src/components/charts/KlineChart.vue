@@ -3,12 +3,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import * as echarts from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { CandlestickChart, BarChart } from 'echarts/charts'
-import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components'
-import { use } from 'echarts/core'
+import { computed, ref, watch } from 'vue'
+import { useChart } from '@/composables/useChart'
 
 type KlineRow = {
   date: string
@@ -29,10 +25,7 @@ const props = withDefaults(
   }
 )
 
-use([CanvasRenderer, CandlestickChart, BarChart, GridComponent, TooltipComponent, DataZoomComponent])
-
 const chartRef = ref<HTMLDivElement | null>(null)
-let chart: echarts.ECharts | null = null
 
 const chartStyle = computed(() => ({
   height: `${props.height}px`,
@@ -136,45 +129,17 @@ function buildOption(rows: KlineRow[]) {
   }
 }
 
-function disposeChart() {
-  if (chart) {
-    chart.dispose()
-    chart = null
-  }
+function buildOptionFromProps() {
+  return props.rows.length ? buildOption(props.rows) : null
 }
 
-function render() {
-  if (!chartRef.value || !props.rows.length) {
-    disposeChart()
-    return
+const { chart } = useChart(chartRef as any, buildOptionFromProps)
+
+watch(() => props.rows, () => {
+  if (chart.value && props.rows.length) {
+    chart.value.setOption(buildOption(props.rows), true)
   }
-  if (!chart) {
-    chart = echarts.init(chartRef.value)
-  }
-  chart.setOption(buildOption(props.rows), true)
-}
-
-function onResize() {
-  chart?.resize()
-}
-
-watch(
-  () => props.rows,
-  () => {
-    render()
-  },
-  { deep: true }
-)
-
-onMounted(() => {
-  render()
-  window.addEventListener('resize', onResize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', onResize)
-  disposeChart()
-})
+}, { deep: true })
 </script>
 
 <style scoped>

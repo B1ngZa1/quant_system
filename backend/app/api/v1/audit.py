@@ -79,7 +79,7 @@ async def cleanup_audit_logs(
     _current_user: User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    cutoff = datetime.utcnow() - timedelta(days=max(1, settings.AUDIT_LOG_RETENTION_DAYS))
+    cutoff = datetime.now(timezone.utc) - timedelta(days=max(1, settings.AUDIT_LOG_RETENTION_DAYS))
     result = await db.execute(delete(AuditLog).where(AuditLog.created_at < cutoff))
     await db.commit()
     deleted = result.rowcount or 0

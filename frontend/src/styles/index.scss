@@ -350,3 +350,77 @@ html.dark {
     }
   }
 }
+
+// ============================================
+// 移动端适配
+// ============================================
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .el-dialog {
+    width: 92vw !important;
+    margin: 8vh auto !important;
+  }
+
+  .el-drawer {
+    width: 88vw !important;
+  }
+
+  .el-table {
+    font-size: 13px;
+  }
+
+  .el-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  // 侧边栏移动端：默认折叠
+  .sidebar {
+    position: fixed;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+
+    &:not(.collapsed) {
+      transform: translateX(0);
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .el-dialog {
+    margin: 4vh auto !important;
+  }
+
+  .el-descriptions {
+    font-size: 13px;
+  }
+
+  .el-form-item__label {
+    font-size: 13px;
+  }
+}
+
+// ============================================
+// 打印样式
+// ============================================
+@media print {
+  .sidebar,
+  .top-header,
+  .el-dialog__wrapper,
+  .el-drawer__wrapper {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+}

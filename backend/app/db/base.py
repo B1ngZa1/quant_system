@@ -1,20 +1,25 @@
 """SQLAlchemy 基础模型"""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 from sqlalchemy import DateTime, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
+def _utcnow() -> datetime:
+    """获取当前 UTC 时间（替代已弃用的 datetime.utcnow）"""
+    return datetime.now(timezone.utc)
+
+
 class Base(DeclarativeBase):
     """基础模型类"""
-    
+
     # 通用字段
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, 
-        default=datetime.utcnow, 
-        onupdate=datetime.utcnow,
+        DateTime,
+        default=_utcnow,
+        onupdate=_utcnow,
         nullable=False
     )
     

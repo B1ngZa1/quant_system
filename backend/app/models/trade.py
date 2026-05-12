@@ -159,23 +159,23 @@ class Portfolio(Base):
     # 外键关联
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
-    # 关联关系
+    # 关联关系（使用 noload 避免过度加载，需要时按需加载）
     user: Mapped[Any] = relationship("User", back_populates="portfolios")
     positions: Mapped[list[Any]] = relationship(
         "Position",
         back_populates="portfolio",
-        lazy="selectin",
+        lazy="noload",
         cascade="all, delete-orphan"
     )
     trades: Mapped[list[Any]] = relationship(
         "Trade",
         back_populates="portfolio",
-        lazy="selectin"
+        lazy="noload"
     )
     performances: Mapped[list[Any]] = relationship(
         "PortfolioPerformance",
         back_populates="portfolio",
-        lazy="selectin",
+        lazy="noload",
         cascade="all, delete-orphan"
     )
     

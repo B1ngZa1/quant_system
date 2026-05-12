@@ -158,3 +158,21 @@ class FundFlow(Base):
     
     def __repr__(self) -> str:
         return f"<FundFlow(symbol={self.symbol}, date={self.trade_date}, net_flow={self.main_net_flow})>"
+
+
+class NewsSymbol(Base):
+    """新闻-标的关联表（用于高效按标的查询关联新闻）"""
+    __tablename__ = "news_symbols"
+
+    # 新闻 ID
+    news_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    # 标的代码
+    symbol: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    __table_args__ = (
+        Index("ix_news_symbols_news_id_symbol", "news_id", "symbol", unique=True),
+        Index("ix_news_symbols_symbol", "symbol"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<NewsSymbol(news_id={self.news_id}, symbol={self.symbol})>"

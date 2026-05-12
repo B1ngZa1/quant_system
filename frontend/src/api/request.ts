@@ -149,9 +149,6 @@ service.interceptors.response.use(
     return data
   },
   (error: AxiosError) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/678835f6-0f08-447a-8a27-257c5fa184e3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'baseline',hypothesisId:'H1',location:'frontend/src/api/request.ts:error-interceptor',message:'Axios response error intercepted',data:{hasResponse:Boolean(error.response),status:error.response?.status ?? null,message:error.message ?? null,url:error.config?.url ?? null,method:error.config?.method ?? null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     // 处理缓存响应
     if ((error as any).__cached) {
       return Promise.resolve((error as any).data)
@@ -190,9 +187,6 @@ service.interceptors.response.use(
         (status === 401 || businessCode === 40100 || businessCode === 40102)
 
       if (shouldTryRefresh) {
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/678835f6-0f08-447a-8a27-257c5fa184e3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'baseline',hypothesisId:'H2',location:'frontend/src/api/request.ts:refresh-branch',message:'Token refresh branch decision',data:{shouldTryRefresh,isRefreshing,hasRefreshToken:Boolean(userStore.refreshToken),status,businessCode,url:originalRequest?.url ?? null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         if (isRefreshing) {
           return new Promise(resolve => {
             subscribeTokenRefresh((newToken: string) => {

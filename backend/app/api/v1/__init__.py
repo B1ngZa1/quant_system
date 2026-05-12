@@ -6,6 +6,7 @@ from app.api.v1 import (
     audit,
     auth,
     backtest,
+    cache,
     data,
     data_sync,
     market,
@@ -34,3 +35,4 @@ router.include_router(data.router, prefix="/data", tags=["数据引擎"])
 router.include_router(data_sync.router, prefix="/data-sync", tags=["数据同步"])
 router.include_router(monitor.router, prefix="/monitor", tags=["系统监控"])
 router.include_router(audit.router, prefix="/admin", tags=["审计"])
+router.include_router(cache.router, prefix="/cache", tags=["缓存管理"])

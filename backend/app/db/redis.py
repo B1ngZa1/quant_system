@@ -1,24 +1,37 @@
 """Redis 缓存管理"""
-import pickle
+import json
 from typing import Optional, Any, Union
-from datetime import timedelta
+from datetime import datetime, timedelta
 import redis.asyncio as aioredis
 
 from app.core.config import settings
 from app.core.logging import log
 
 
+class _JsonEncoder(json.JSONEncoder):
+    """扩展 JSON 编码器，支持 datetime 和 bytes 等常见类型。"""
+
+    def default(self, o: Any) -> Any:
+        if isinstance(o, datetime):
+            return o.isoformat()
+        if isinstance(o, bytes):
+            return o.decode("utf-8", errors="replace")
+        if isinstance(o, set):
+            return list(o)
+        return super().default(o)
+
+
 class RedisCache:
-    """Redis 缓存管理类"""
-    
+    """Redis 缓存管理类（使用 JSON 序列化，替代 pickle 提升安全性与速度）"""
+
     _instance: Optional["RedisCache"] = None
     _redis: Optional[aioredis.Redis] = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     async def connect(self):
         """连接 Redis"""
         if self._redis is None:
@@ -27,50 +40,54 @@ class RedisCache:
                     settings.redis_url,
                     encoding="utf-8",
                     decode_responses=False,
-                    max_connections=settings.REDIS_POOL_SIZE
+                    max_connections=settings.REDIS_POOL_SIZE,
                 )
                 await self._redis.ping()
                 log.info("Redis 连接成功")
             except Exception as e:
                 log.error(f"Redis 连接失败: {e}")
                 raise
-    
+
     async def disconnect(self):
         """断开 Redis 连接"""
         if self._redis:
             await self._redis.close()
             self._redis = None
             log.info("Redis 连接已关闭")
-    
+
     @property
     def redis(self) -> aioredis.Redis:
         """获取 Redis 客户端"""
         if self._redis is None:
             raise RuntimeError("Redis 未连接")
         return self._redis
-    
+
     async def get(self, key: str) -> Optional[Any]:
         """获取缓存值"""
         try:
             data = await self.redis.get(key)
             if data:
-                return pickle.loads(data)
+                return json.loads(data)
             return None
         except Exception as e:
             log.error(f"Redis get 错误: {e}")
             return None
-    
+
     async def set(
         self,
         key: str,
         value: Any,
-        expire: Optional[Union[int, timedelta]] = None
+        expire: Optional[Union[int, timedelta]] = None,
     ) -> bool:
         """设置缓存值"""
         try:
-            data = pickle.dumps(value)
+            data = json.dumps(value, ensure_ascii=False, cls=_JsonEncoder)
             if expire:
-                await self.redis.setex(key, int(expire.total_seconds() if isinstance(expire, timedelta) else expire), data)
+                await self.redis.setex(
+                    key,
+                    int(expire.total_seconds() if isinstance(expire, timedelta) else expire),
+                    data,
+                )
             else:
                 await self.redis.set(key, data)
             return True

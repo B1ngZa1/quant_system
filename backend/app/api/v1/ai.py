@@ -50,6 +50,27 @@ class BacktestInterpretRequest(BaseModel):
     win_rate: float = Field(..., description="胜率(%)")
 
 
+class NL2StrategyRequest(BaseModel):
+    """自然语言生成策略代码请求。"""
+
+    prompt: str = Field(
+        ...,
+        min_length=5,
+        max_length=2000,
+        description="用自然语言描述你想要的交易策略，例如：用20日和60日均线金叉死叉做多空切换，止损3%",
+    )
+    symbols: list[str] = Field(default_factory=list, description="可选，指定策略关注的股票代码")
+    risk_level: str = Field("medium", description="风险偏好: low/medium/high")
+
+
+class NL2StrategyResponse(BaseModel):
+    """自然语言生成策略代码响应。"""
+
+    code: str = Field(..., description="生成的策略Python代码")
+    explanation: str = Field("", description="策略逻辑的文字说明")
+    provider: str = Field("deepseek", description="生成来源: deepseek / fallback")
+
+
 @router.post("/strategy/suggest", response_model=DataResponse[dict])
 async def suggest_strategy(
     request: StrategySuggestionRequest, current_user=Depends(get_current_user)
@@ -111,6 +132,118 @@ def handle_data(context, data):
             order_target_percent(symbol, 0)
 """
         }
+    )
+
+
+_NL2STRATEGY_SYSTEM_PROMPT = """\
+你是一位资深量化策略工程师。用户会用自然语言描述一个交易策略，你需要把它转化为可运行的 Python 策略代码。
+
+## 框架约束
+
+你生成的代码必须严格遵循以下框架规范：
+
+1. 代码中必须定义 `initialize(context)` 和 `handle_data(context, data)` 两个函数。
+2. `initialize(context)` 用于初始化配置：
+   - `set_benchmark('000001.SH')` 设置基准
+   - `set_commission(0.0003)` 设置佣金
+   - `set_slippage(0.001)` 设置滑点
+   - 在 `context` 上挂载自定义参数，如 `context.symbols = [...]`
+3. `handle_data(context, data)` 每个交易日调用一次：
+   - `data.history(symbol, field, count, frequency)` 获取历史数据
+     - `field`: 'open', 'high', 'low', 'close', 'volume'
+     - `frequency`: '1d' (日线), '1m' (分钟线)
+   - `context.portfolio.positions.get(symbol)` 查询持仓
+   - `context.portfolio.positions[symbol].amount` 查询持仓数量
+   - `context.portfolio.total_value` 查询组合总市值
+   - `context.portfolio.available_cash` 查询可用现金
+   - `order(symbol, amount)` 下单（正数买入，负数卖出）
+   - `order_target_percent(symbol, percent)` 按目标仓位比例下单
+   - `order_target_value(symbol, value)` 按目标金额下单
+
+## 输出格式要求
+
+1. 只输出 Python 代码，不要包含任何 markdown 标记（不要用 ```python``` 包裹）。
+2. 代码应包含简洁的中文注释说明关键逻辑。
+3. 代码应可直接运行，无语法错误。
+4. 风控措施（止损/止盈/仓位上限）必须内嵌在代码中。
+5. 如果用户未指定股票代码，使用 `context.symbols` 作为占位并在 `initialize` 中给出示例列表。
+"""
+
+
+@router.post("/strategy/generate", response_model=DataResponse[dict])
+async def generate_strategy_code(
+    request: NL2StrategyRequest, current_user=Depends(get_current_user)
+) -> Any:
+    """自然语言转策略代码：输入策略描述，输出可运行的 Python 策略代码。"""
+    _ = current_user
+    symbols_hint = ""
+    if request.symbols:
+        symbols_hint = f"\n用户指定的股票代码: {', '.join(request.symbols)}"
+
+    user_prompt = (
+        f"请根据以下描述生成策略代码：\n\n"
+        f"{request.prompt}\n"
+        f"风险偏好: {request.risk_level}{symbols_hint}"
+    )
+
+    generated_code = await ai_analysis_service.ask_deepseek(
+        _NL2STRATEGY_SYSTEM_PROMPT, user_prompt
+    )
+
+    if generated_code:
+        # 去除可能的 markdown 代码块包裹
+        code = generated_code.strip()
+        if code.startswith("```"):
+            # 移除首行 ```python 或 ```
+            first_newline = code.index("\n")
+            code = code[first_newline + 1 :]
+        if code.endswith("```"):
+            code = code[: code.rfind("```")].rstrip()
+        return DataResponse(
+            data=NL2StrategyResponse(
+                code=code,
+                explanation="策略代码已根据自然语言描述生成，请在回测环境中验证后再实盘使用。",
+                provider="deepseek",
+            ).model_dump()
+        )
+
+    # DeepSeek 不可用时的降级响应
+    fallback_code = """\
+def initialize(context):
+    set_benchmark('000001.SH')
+    set_commission(0.0003)
+    set_slippage(0.001)
+    context.symbols = ['000001', '600519']
+    context.ma_short = 20
+    context.ma_long = 60
+    context.stop_loss = 0.03
+
+def handle_data(context, data):
+    for symbol in context.symbols:
+        hist = data.history(symbol, 'close', context.ma_long + 5, '1d')
+        ma_short = hist[-context.ma_short:].mean()
+        ma_long = hist.mean()
+        position = context.portfolio.positions.get(symbol)
+
+        if ma_short > ma_long and not position:
+            # 金叉开仓
+            order_target_percent(symbol, 0.5 / len(context.symbols))
+        elif ma_short < ma_long and position:
+            # 死叉平仓
+            order_target_percent(symbol, 0)
+        elif position:
+            # 止损检查
+            cost_price = position.avg_cost
+            current_price = hist.iloc[-1]
+            if (current_price - cost_price) / cost_price <= -context.stop_loss:
+                order_target_percent(symbol, 0)
+"""
+    return DataResponse(
+        data=NL2StrategyResponse(
+            code=fallback_code.strip(),
+            explanation="未配置 DeepSeek API Key，返回示例策略代码。请配置后重试以获得基于您描述生成的定制代码。",
+            provider="fallback",
+        ).model_dump()
     )
 
 
@@ -253,6 +386,7 @@ async def list_items(current_user=Depends(get_current_user)) -> Any:
         data={
             "items": [
                 "strategy/suggest",
+                "strategy/generate",
                 "code/optimize",
                 "market/analyze",
                 "event/analyze",

@@ -90,7 +90,7 @@ async def run_backtest_task(backtest_id: int, use_real_data: bool = True):
             if backtest:
                 backtest.status = BacktestStatus.FAILED
                 backtest.error_message = str(exc)
-                backtest.completed_at = datetime.utcnow()
+                backtest.completed_at = datetime.now(timezone.utc)
                 await db.commit()
 
 
