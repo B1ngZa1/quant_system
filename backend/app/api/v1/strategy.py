@@ -1,6 +1,6 @@
 """策略API"""
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +17,7 @@ from app.schemas.strategy import (
     StrategyCodeUpdate,
 )
 from app.schemas.base import DataResponse, ListResponse, SuccessResponse
+from app.utils.crud import get_owned_item, paginate_query
 
 router = APIRouter()
 
@@ -51,35 +52,24 @@ async def list_strategies(
     """获取策略列表"""
     query = select(Strategy).where(Strategy.user_id == current_user.id)
     count_query = select(func.count(Strategy.id)).where(Strategy.user_id == current_user.id)
-    
+
     if params.strategy_type:
         query = query.where(Strategy.strategy_type == params.strategy_type)
         count_query = count_query.where(Strategy.strategy_type == params.strategy_type)
-    
+
     if params.status:
         query = query.where(Strategy.status == params.status)
         count_query = count_query.where(Strategy.status == params.status)
-    
+
     if params.search:
         search_filter = Strategy.name.ilike(f"%{params.search}%")
         query = query.where(search_filter)
         count_query = count_query.where(search_filter)
-    
+
     query = query.order_by(desc(Strategy.updated_at))
-    
-    count_result = await db.execute(count_query)
-    total = count_result.scalar()
-    
-    query = query.offset(params.offset).limit(params.page_size)
-    result = await db.execute(query)
-    strategies = result.scalars().all()
-    
-    return ListResponse(
-        data=[StrategyResponse.model_validate(s) for s in strategies],
-        total=total,
-        page=params.page,
-        page_size=params.page_size
-    )
+
+    result = await paginate_query(db, query, count_query, params.page, params.page_size, StrategyResponse)
+    return ListResponse(**result)
 
 
 @router.post("/create", response_model=DataResponse[StrategyResponse])
@@ -116,20 +106,7 @@ async def get_strategy(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """获取策略详情"""
-    result = await db.execute(
-        select(Strategy).where(
-            Strategy.id == strategy_id,
-            Strategy.user_id == current_user.id
-        )
-    )
-    strategy = result.scalar_one_or_none()
-    
-    if not strategy:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="策略不存在"
-        )
-    
+    strategy = await get_owned_item(db, Strategy, strategy_id, current_user.id, "策略不存在")
     return DataResponse(data=StrategyResponse.model_validate(strategy))
 
 
@@ -143,20 +120,8 @@ async def update_strategy(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """更新策略"""
-    result = await db.execute(
-        select(Strategy).where(
-            Strategy.id == strategy_id,
-            Strategy.user_id == current_user.id
-        )
-    )
-    strategy = result.scalar_one_or_none()
-    
-    if not strategy:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="策略不存在"
-        )
-    
+    strategy = await get_owned_item(db, Strategy, strategy_id, current_user.id, "策略不存在")
+
     update_data = strategy_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(strategy, field, value)
@@ -176,19 +141,7 @@ async def update_strategy_code(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """更新策略代码"""
-    result = await db.execute(
-        select(Strategy).where(
-            Strategy.id == strategy_id,
-            Strategy.user_id == current_user.id
-        )
-    )
-    strategy = result.scalar_one_or_none()
-    
-    if not strategy:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="策略不存在"
-        )
+    strategy = await get_owned_item(db, Strategy, strategy_id, current_user.id, "策略不存在")
     
     strategy.code = code_update.code
     if code_update.parameters:
@@ -209,19 +162,7 @@ async def delete_strategy(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """删除策略"""
-    result = await db.execute(
-        select(Strategy).where(
-            Strategy.id == strategy_id,
-            Strategy.user_id == current_user.id
-        )
-    )
-    strategy = result.scalar_one_or_none()
-    
-    if not strategy:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="策略不存在"
-        )
+    strategy = await get_owned_item(db, Strategy, strategy_id, current_user.id, "策略不存在")
     
     await db.delete(strategy)
     await db.commit()
@@ -237,19 +178,7 @@ async def toggle_strategy_status(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """切换策略状态"""
-    result = await db.execute(
-        select(Strategy).where(
-            Strategy.id == strategy_id,
-            Strategy.user_id == current_user.id
-        )
-    )
-    strategy = result.scalar_one_or_none()
-    
-    if not strategy:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="策略不存在"
-        )
+    strategy = await get_owned_item(db, Strategy, strategy_id, current_user.id, "策略不存在")
     
     # 切换状态
     if strategy.status == StrategyStatus.ACTIVE:

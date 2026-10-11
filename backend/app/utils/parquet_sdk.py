@@ -2,8 +2,9 @@ from pathlib import Path
 from typing import List, Optional, Union, Dict, Any
 import pyarrow.dataset as ds
 import pandas as pd
-import logging
 from datetime import date
+
+from app.core.logging import log
 
 class ParquetDataSDK:
     """
@@ -21,7 +22,7 @@ class ParquetDataSDK:
             
         dataset_path = self.root_dir / adj_type
         if not dataset_path.exists():
-            logging.warning(f"Parquet dataset {dataset_path} does not exist.")
+            log.warning(f"Parquet dataset {dataset_path} does not exist.")
             return None
             
         try:
@@ -33,7 +34,7 @@ class ParquetDataSDK:
             self._datasets[adj_type] = dataset
             return dataset
         except Exception as e:
-            logging.error(f"Failed to load dataset from {dataset_path}: {e}")
+            log.error(f"Failed to load dataset from {dataset_path}: {e}")
             return None
 
     def get_history_data(
@@ -72,7 +73,7 @@ class ParquetDataSDK:
                 df = df.sort_values("date").reset_index(drop=True)
             return df
         except Exception as e:
-            logging.error(f"Query failed for {symbol}: {e}")
+            log.error(f"Query failed for {symbol}: {e}")
             return pd.DataFrame()
 
     def get_cross_section(
@@ -98,7 +99,7 @@ class ParquetDataSDK:
             table = dataset.to_table(filter=filter_expr, columns=columns)
             return table.to_pandas()
         except Exception as e:
-            logging.error(f"Cross-section query failed for {target_date}: {e}")
+            log.error(f"Cross-section query failed for {target_date}: {e}")
             return pd.DataFrame()
 
     def get_info(self, adj_type: str = "前复权") -> Dict[str, Any]:

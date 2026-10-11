@@ -58,8 +58,8 @@
           <el-table-column prop="price" label="价格" width="100">
             <template #default="{ row }">{{ Number(row.price).toFixed(2) }}</template>
           </el-table-column>
-          <el-table-column prop="total_amount" label="金额" width="120">
-            <template #default="{ row }">{{ formatMoney(row.total_amount) }}</template>
+          <el-table-column prop="executed_amount" label="金额" width="120">
+            <template #default="{ row }">{{ formatMoney(row.executed_amount) }}</template>
           </el-table-column>
           <el-table-column prop="status" label="状态" width="100">
             <template #default="{ row }">

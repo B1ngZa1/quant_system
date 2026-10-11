@@ -19,21 +19,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { getTradeList } from '@/api/trade'
+import { computed, onMounted } from 'vue'
+import { useTrades } from '@/composables/useTrades'
 
-const loading = ref(false)
-const rows = ref<any[]>([])
+const { trades, loading, fetchTrades } = useTrades()
 
-const fetchRows = async () => {
-  loading.value = true
-  try {
-    const res = await getTradeList({ page: 1, page_size: 200, is_simulated: true })
-    rows.value = (res.data || []).filter((item: any) => item.status !== 'pending')
-  } finally {
-    loading.value = false
-  }
-}
+const rows = computed(() => trades.value.filter((t) => t.status !== 'pending'))
 
-onMounted(fetchRows)
+onMounted(() => fetchTrades())
 </script>

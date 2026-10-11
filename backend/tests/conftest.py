@@ -1,8 +1,7 @@
-"""Pytest 启动前设置环境变量，避免加载占位 SECRET_KEY 触发校验失败。"""
+"""Pytest 启动前设置环境变量，确保使用 PostgreSQL 测试库。"""
 
 import os
 import asyncio
-import pathlib
 
 import pytest
 import pytest_asyncio
@@ -10,11 +9,7 @@ import pytest_asyncio
 os.environ.setdefault("ENVIRONMENT", "development")
 os.environ.setdefault("SECRET_KEY", "pytest-secret-key-minimum-32-characters-long")
 os.environ.setdefault("CORS_ORIGINS", '["http://localhost:3000"]')
-os.environ["DATABASE_TYPE"] = "sqlite"
-
-_backend_dir = pathlib.Path(__file__).resolve().parents[1]
-_backend_dir.joinpath("data").mkdir(parents=True, exist_ok=True)
-TEST_DB_URL = f"sqlite+aiosqlite:///{_backend_dir}/data/test_quant.db"
+os.environ.setdefault("POSTGRES_DB", "quant_test_db")
 
 _engine = None
 
@@ -23,7 +18,8 @@ def _get_engine():
     global _engine
     if _engine is None:
         from sqlalchemy.ext.asyncio import create_async_engine
-        _engine = create_async_engine(TEST_DB_URL, echo=False)
+        from app.core.config import settings
+        _engine = create_async_engine(settings.postgres_url, echo=False)
     return _engine
 
 
@@ -44,17 +40,7 @@ async def _create_tables():
     yield
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    # Dispose engine to release file lock before cleanup
     await engine.dispose()
-    # Clean up test DB file
-    db_path = _backend_dir / "data" / "test_quant.db"
-    for suffix in ("", "-wal", "-shm"):
-        p = pathlib.Path(str(db_path) + suffix)
-        try:
-            if p.exists():
-                p.unlink()
-        except PermissionError:
-            pass
 
 
 @pytest.fixture()

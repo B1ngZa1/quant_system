@@ -40,7 +40,7 @@ const variantClass = computed(() => `ui-card--${props.variant}`)
 .ui-card {
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-xl);
-  background: linear-gradient(180deg, rgba(31, 23, 29, 0.96), rgba(21, 16, 20, 0.9));
+  background: var(--bg-panel);
   box-shadow: var(--shadow-base);
   transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
 
@@ -55,14 +55,14 @@ const variantClass = computed(() => `ui-card--${props.variant}`)
   }
 
   &--highlight {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(30, 64, 175, 0.24));
+    background: linear-gradient(135deg, var(--primary-50), var(--bg-panel));
     border-color: var(--line-strong);
   }
 }
 
 .ui-card__header {
   padding: 12px 16px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--line-soft);
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="量化交易软件市场与财务研究的离线、来源可追溯数据仪表盘。">
+  <title>量化交易软件：高利润取决于软件化收入，而非交易额</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #566176;
+      --paper: #f6f8fb;
+      --card: #ffffff;
+      --line: #d4dae5;
+      --teal: #007c7a;
+      --blue: #285cc4;
+      --amber: #9a5b00;
+      --red: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.58 ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; }
+    main { max-width: 1160px; margin: auto; padding: 32px 24px 56px; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 860px; font-size: clamp(1.85rem, 4vw, 3rem); line-height: 1.16; letter-spacing: -0.04em; }
+    h2 { margin-bottom: 12px; font-size: 1.25rem; }
+    .eyebrow { margin-bottom: 10px; color: var(--teal); font-weight: 750; letter-spacing: .05em; text-transform: uppercase; font-size: .78rem; }
+    .lede { max-width: 870px; font-size: 1.08rem; color: var(--muted); }
+    .notice { margin: 22px 0 28px; padding: 12px 15px; border-left: 4px solid var(--amber); background: #fff8e8; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0 32px; }
+    .card, section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 1px 2px rgb(23 32 51 / .04); }
+    .card { padding: 18px; min-height: 178px; }
+    .card .label { color: var(--muted); font-size: .9rem; }
+    .card .value { margin: 14px 0 6px; font-size: 1.58rem; font-weight: 800; line-height: 1.1; }
+    .card .context { color: var(--muted); font-size: .86rem; }
+    section { margin-top: 18px; padding: 22px; }
+    .takeaway { padding: 14px 16px; border-radius: 8px; background: #e8f5f4; color: #104a49; font-weight: 650; }
+    .chart-wrap { overflow-x: auto; padding-bottom: 5px; }
+    svg { display: block; min-width: 730px; width: 100%; height: auto; }
+    .metric-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: .93rem; }
+    .metric-table caption { padding-bottom: 8px; text-align: left; font-weight: 700; }
+    .metric-table th, .metric-table td { padding: 9px; border-bottom: 1px solid var(--line); text-align: right; }
+    .metric-table th:first-child, .metric-table td:first-child { text-align: left; }
+    .metric-table th { color: var(--muted); font-weight: 700; }
+    .split { display: grid; grid-template-columns: 1.1fr .9fr; gap: 18px; }
+    .source-list { margin: 0; padding-left: 1.2rem; }
+    a { color: #174da8; }
+    .small { color: var(--muted); font-size: .9rem; }
+    code { padding: 1px 4px; border-radius: 4px; background: #edf0f5; }
+    @media (max-width: 860px) { .grid, .split { grid-template-columns: 1fr; } main { padding: 23px 15px 42px; } section { padding: 17px; } .card { min-height: 0; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Research snapshot · 2026-09-22 · offline</p>
+    <h1>高利润取决于软件化收入与现金质量，而非交易额本身</h1>
+    <p class="lede">交易活动验证了数据、研究、风控与执行工作流的需求；它不等于量化交易软件的可变现市场。本页将市场活动与可比公司的利润、现金转化、研发强度放在各自正确的比较尺度上。</p>
+    <p class="notice"><strong>使用边界：</strong>这是静态研究快照，不是实时行情、收入预测、投资建议或交易授权。外部市场估计不能跨机构拼接为 CAGR；客户资金、结算余额与公司经营现金也不能混为一谈。</p>
+
+    <h2>市场活动：四个不同单位的需求信号，不能相加</h2>
+    <div class="grid" aria-label="市场活动指标卡片">
+      <article class="card"><div class="label">全球股票市值 · 2025</div><div class="value">$151.94T</div><div class="context">WFE；资产存量，不是软件市场规模</div></article>
+      <article class="card"><div class="label">美国股票日均名义成交额 · 2025</div><div class="value">约 $1.1T</div><div class="context">Cboe；交易活动池</div></article>
+      <article class="card"><div class="label">上海股票全年成交额 · 2025</div><div class="value">¥172.6T</div><div class="context">SSE；不同币种与时间粒度</div></article>
+      <article class="card"><div class="label">全球外汇日均成交额 · 2025-04</div><div class="value">$9.6T</div><div class="context">BIS；FX，不可与股票成交额直接合并</div></article>
+    </div>
+
+    <section>
+      <h2>可比公司：同一百分比尺度下，现金转化差异很大</h2>
+      <p class="takeaway">同花顺展示了高利润、正经营现金转化的信息服务样本；恒生电子展示了研发/交付密集的机构系统样本；东方财富的负经营现金转化提示经纪与客户结算相关资金不能当作 SaaS 现金流。</p>
+      <div class="chart-wrap">
+        <svg viewBox="0 0 760 370" role="img" aria-labelledby="chart-title chart-desc">
+          <title id="chart-title">三家金融信息和金融科技公司的净利率、经营现金流与净利润比率、研发与营收比率</title>
+          <desc id="chart-desc">零点居中。每家公司展示三项百分比。东方财富的经营现金流与净利润比率为负百分之八十五，条形向左。</desc>
+          <rect x="0" y="0" width="760" height="370" fill="#ffffff"/>
+          <g fill="#566176" font-family="ui-sans-serif, system-ui, Microsoft YaHei" font-size="12">
+            <text x="65" y="29">-100%</text><text x="304" y="29">0%</text><text x="539" y="29">100%</text><text x="595" y="29">120%</text>
+          </g>
+          <g stroke="#d4dae5" stroke-width="1"><line x1="70" y1="36" x2="70" y2="342"/><line x1="315" y1="36" x2="315" y2="342" stroke="#566176" stroke-width="1.5"/><line x1="560" y1="36" x2="560" y2="342"/><line x1="609" y1="36" x2="609" y2="342"/></g>
+          <g fill="#172033" font-family="ui-sans-serif, system-ui, Microsoft YaHei" font-size="13" font-weight="700"><text x="8" y="78">同花顺</text><text x="8" y="174">恒生电子</text><text x="8" y="270">东方财富</text></g>
+          <g fill="#566176" font-family="ui-sans-serif, system-ui, Microsoft YaHei" font-size="12"><text x="135" y="61">净利率</text><text x="135" y="85">经营现金流 / 净利润</text><text x="135" y="109">研发 / 营收</text><text x="135" y="157">净利率</text><text x="135" y="181">经营现金流 / 净利润</text><text x="135" y="205">研发 / 营收</text><text x="135" y="253">净利率</text><text x="135" y="277">经营现金流 / 净利润</text><text x="135" y="301">研发 / 营收</text></g>
+          <g>
+            <rect x="315" y="48" width="130.3" height="15" rx="3" fill="#007c7a"/><text x="451" y="60" fill="#172033" font-size="12">53.2%</text>
+            <rect x="315" y="72" width="289.1" height="15" rx="3" fill="#285cc4"/><text x="610" y="84" fill="#172033" font-size="12">118%</text>
+            <rect x="315" y="96" width="46.6" height="15" rx="3" fill="#9a5b00"/><text x="367" y="108" fill="#172033" font-size="12">19.0%</text>
+            <rect x="315" y="144" width="52.2" height="15" rx="3" fill="#007c7a"/><text x="373" y="156" fill="#172033" font-size="12">21.3%</text>
+            <rect x="315" y="168" width="213.2" height="15" rx="3" fill="#285cc4"/><text x="534" y="180" fill="#172033" font-size="12">87%</text>
+            <rect x="315" y="192" width="92.4" height="15" rx="3" fill="#9a5b00"/><text x="413" y="204" fill="#172033" font-size="12">37.7%</text>
+            <rect x="315" y="240" width="184.2" height="15" rx="3" fill="#007c7a"/><text x="505" y="252" fill="#172033" font-size="12">75.2%</text>
+            <rect x="106.8" y="264" width="208.2" height="15" rx="3" fill="#b42318"/><text x="100" y="276" text-anchor="end" fill="#172033" font-size="12">−85%</text>
+            <rect x="315" y="288" width="16.2" height="15" rx="3" fill="#9a5b00"/><text x="337" y="300" fill="#172033" font-size="12">6.6%</text>
+          </g>
+          <g fill="#566176" font-family="ui-sans-serif, system-ui, Microsoft YaHei" font-size="11"><text x="70" y="362">单位：%; 经营现金流 / 净利润以百分比呈现。来源：FY2025 年报标准化事实与已披露页码。</text></g>
+        </svg>
+      </div>
+      <table class="metric-table">
+        <caption>图表的可访问文本数据</caption>
+        <thead><tr><th>公司</th><th>营收（CNY bn）</th><th>归母净利率</th><th>经营现金流 / 归母净利润</th><th>研发 / 营收</th></tr></thead>
+        <tbody><tr><td>同花顺</td><td>6.029</td><td>53.2%</td><td>118%</td><td>19.0%</td></tr><tr><td>恒生电子</td><td>5.783</td><td>21.3%</td><td>87%</td><td>37.7%</td></tr><tr><td>东方财富</td><td>16.068</td><td>75.2%</td><td>−85%</td><td>6.6%</td></tr></tbody>
+      </table>
+    </section>
+
+    <div class="split">
+      <section>
+        <h2>可操作的商业判断</h2>
+        <ol>
+          <li>优先验证数据、研究工作流、风险控制与 API 的经常性收入，而非从交易额反推收入。</li>
+          <li>对订阅、数据、API、实施和其他收入分开建模；将数据许可、计算、研发、支持、销售与合规成本分别记录。</li>
+          <li>企业现金、客户资金、受限现金、结算余额和保证金必须分列；高利润不自动代表高自由现金流。</li>
+          <li>模型、回测和执行走廊仍只产生候选动作，独立风险约束和人工审批是上线前置条件。</li>
+        </ol>
+      </section>
+      <section id="sources">
+        <h2>来源与口径</h2>
+        <ul class="source-list">
+          <li><a href="../market-research/market_research.csv">市场研究 CSV</a>：包含 source ID、单位、币种、方法、置信度与官方 URL。</li>
+          <li><a href="../financials/financials_normalized.csv">财务标准化 CSV</a>：包含年报页码、币种、报告期与原始 URL。</li>
+          <li><a href="2026-09-22_quant_trading_software_market_financial_v1.md">市场—财务整合报告</a>：解释事实、外部估计、推断与假设的边界。</li>
+          <li>外部算法交易市场估计为 2025 年 $19.17B（Research and Markets）及 2030 年 $42.99B（Grand View Research）；两者口径不同，仅作区间线索。</li>
+        </ul>
+        <p class="small">离线数据快照；无第三方脚本、无 cookie、无网络请求、无交易连接。若源 CSV 或年度报告修订，图表、表格与叙述必须同时复核。</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,5 +1,11 @@
 <template>
-  <el-table :data="rows" stripe class="stock-table" @row-click="$emit('row-click', $event)">
+  <el-table
+    :data="props.rows"
+    stripe
+    class="stock-table"
+    :class="{ 'stock-table--static': props.navigationDisabled }"
+    @row-click="handleRowClick"
+  >
     <el-table-column label="代码（名称）" min-width="200" sortable prop="symbol">
       <template #default="{ row }">
         <span class="sym-name">
@@ -25,7 +31,12 @@
     <el-table-column prop="market" label="市场" width="100" />
     <el-table-column label="操作" width="120" fixed="right">
       <template #default="{ row }">
-        <el-button link type="primary" @click.stop="$emit('detail', row.symbol)">详情</el-button>
+        <el-button
+          link
+          type="primary"
+          :disabled="props.navigationDisabled"
+          @click.stop="handleDetail(row.symbol)"
+        >详情</el-button>
       </template>
     </el-table-column>
   </el-table>
@@ -33,8 +44,18 @@
 
 <script setup lang="ts">
 import type { MarketRow } from './types'
-defineEmits<{ 'row-click': [row: MarketRow]; detail: [symbol: string] }>()
-defineProps<{ rows: MarketRow[] }>()
+const emit = defineEmits<{ 'row-click': [row: MarketRow]; detail: [symbol: string] }>()
+const props = withDefaults(defineProps<{ rows: MarketRow[]; navigationDisabled?: boolean }>(), {
+  navigationDisabled: false
+})
+
+function handleRowClick(row: MarketRow) {
+  if (!props.navigationDisabled) emit('row-click', row)
+}
+
+function handleDetail(symbol: string) {
+  if (!props.navigationDisabled) emit('detail', symbol)
+}
 
 function exchangeLabel(ex?: string) {
   if (ex === 'SSE') return '上证'
@@ -83,5 +104,9 @@ function pctClass(v: unknown) {
 }
 .pct-flat {
   color: #64748b;
+}
+
+.stock-table--static :deep(.el-table__row) {
+  cursor: default;
 }
 </style>

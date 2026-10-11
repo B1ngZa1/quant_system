@@ -1,14 +1,11 @@
 """安全与认证模块"""
 
-import logging
-import threading
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import uuid4
 
 import bcrypt
-import redis
-from redis.connection import ConnectionPool
+import redis.asyncio as aioredis
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
@@ -16,48 +13,41 @@ from passlib.context import CryptContext
 from passlib.exc import UnknownHashError
 
 from app.core.config import settings
-
-log = logging.getLogger(__name__)
+from app.core.logging import log
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
 
 security_bearer = HTTPBearer(auto_error=False)
 _revoked_jti_store: dict[str, datetime] = {}
-_revoked_jti_lock = threading.Lock()
 
 REDIS_BLACKLIST_PREFIX = "token:revoked:"
 _redis_blacklist_available = False
-_sync_redis_pool: Optional[ConnectionPool] = None
-_sync_redis_client: Optional[redis.Redis] = None
-_sync_redis_lock = threading.Lock()
+_async_redis_client: Optional[aioredis.Redis] = None
 
 
-def _get_sync_redis_client() -> Optional[redis.Redis]:
-    global _sync_redis_client, _sync_redis_pool
-    if _sync_redis_client is not None:
-        return _sync_redis_client
-    with _sync_redis_lock:
-        if _sync_redis_client is not None:
-            return _sync_redis_client
-        try:
-            _sync_redis_pool = ConnectionPool(
-                host=settings.REDIS_HOST,
-                port=settings.REDIS_PORT,
-                db=settings.REDIS_DB,
-                password=settings.REDIS_PASSWORD,
-                decode_responses=False,
-                socket_timeout=1.0,
-                socket_connect_timeout=1.0,
-                max_connections=5,
-            )
-            _sync_redis_client = redis.Redis(connection_pool=_sync_redis_pool)
-            _sync_redis_client.ping()
-            log.info("Sync Redis client connected successfully (pooled)")
-            return _sync_redis_client
-        except Exception as e:
-            log.warning(f"Sync Redis client connection failed: {e}")
-            _sync_redis_client = None
-            return None
+async def _get_async_redis_client() -> Optional[aioredis.Redis]:
+    """获取异步 Redis 客户端（懒初始化，连接失败返回 None）"""
+    global _async_redis_client
+    if _async_redis_client is not None:
+        return _async_redis_client
+    try:
+        _async_redis_client = aioredis.Redis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            db=settings.REDIS_DB,
+            password=settings.REDIS_PASSWORD,
+            decode_responses=False,
+            socket_timeout=1.0,
+            socket_connect_timeout=1.0,
+            max_connections=5,
+        )
+        await _async_redis_client.ping()
+        log.info("Async Redis client connected successfully")
+        return _async_redis_client
+    except Exception as e:
+        log.warning(f"Async Redis client connection failed: {e}")
+        _async_redis_client = None
+        return None
 
 
 def _set_redis_available(available: bool) -> None:
@@ -69,25 +59,27 @@ def is_redis_blacklist_available() -> bool:
     return _redis_blacklist_available
 
 
-def _check_token_in_redis_sync(jti: str) -> bool:
-    client = _get_sync_redis_client()
+async def _check_token_in_redis(jti: str) -> bool:
+    """异步检查 token 是否在 Redis 黑名单中"""
+    client = await _get_async_redis_client()
     if client is None:
         return False
     try:
         key = f"{REDIS_BLACKLIST_PREFIX}{jti}"
-        return client.exists(key) > 0
+        return await client.exists(key) > 0
     except Exception as e:
         log.error(f"Redis exists check failed: {e}")
         return False
 
 
-def _add_token_to_redis_sync(jti: str, ttl_seconds: int) -> bool:
-    client = _get_sync_redis_client()
+async def _add_token_to_redis(jti: str, ttl_seconds: int) -> bool:
+    """异步将 token 加入 Redis 黑名单"""
+    client = await _get_async_redis_client()
     if client is None:
         return False
     try:
         key = f"{REDIS_BLACKLIST_PREFIX}{jti}"
-        client.setex(key, ttl_seconds, b"1")
+        await client.setex(key, ttl_seconds, b"1")
         return True
     except Exception as e:
         log.error(f"Redis setex failed: {e}")
@@ -158,14 +150,14 @@ def decode_token(token: str) -> Optional[dict]:
 
 
 def _cleanup_revoked_tokens(now: Optional[datetime] = None) -> None:
+    """清理已过期的内存黑名单条目"""
     current = now or datetime.now(timezone.utc)
-    with _revoked_jti_lock:
-        expired = [jti for jti, exp in _revoked_jti_store.items() if exp <= current]
-        for jti in expired:
-            _revoked_jti_store.pop(jti, None)
+    expired = [jti for jti, exp in _revoked_jti_store.items() if exp <= current]
+    for jti in expired:
+        _revoked_jti_store.pop(jti, None)
 
 
-def revoke_token(token: str) -> None:
+async def revoke_token(token: str) -> None:
     """将 token 加入黑名单，直到其自然过期。"""
     payload = decode_token(token)
     if not payload:
@@ -174,33 +166,23 @@ def revoke_token(token: str) -> None:
     exp = payload.get("exp")
     if not jti or exp is None:
         return
-    expire_at = datetime.fromtimestamp(exp, tz=timezone.utc)
     ttl_seconds = int(exp - datetime.now(timezone.utc).timestamp())
     if ttl_seconds <= 0:
         return
 
-    thread = threading.Thread(target=_revoke_token_background, args=(jti, expire_at, ttl_seconds), daemon=True)
-    thread.start()
-
-
-def _revoke_token_background(jti: str, expire_at: datetime, ttl_seconds: int) -> None:
-    redis_success = _add_token_to_redis_sync(jti, ttl_seconds)
+    expire_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+    redis_success = await _add_token_to_redis(jti, ttl_seconds)
     if redis_success:
         _set_redis_available(True)
         log.info(f"Token {jti} added to Redis blacklist with TTL {ttl_seconds}s")
     else:
         _set_redis_available(False)
         log.warning("Redis unavailable, falling back to memory blacklist")
-        _add_token_to_memory(jti, expire_at)
-
-
-def _add_token_to_memory(jti: str, expire_at: datetime) -> None:
-    _cleanup_revoked_tokens()
-    with _revoked_jti_lock:
+        _cleanup_revoked_tokens()
         _revoked_jti_store[str(jti)] = expire_at
 
 
-def is_token_revoked(payload: Optional[dict]) -> bool:
+async def is_token_revoked(payload: Optional[dict]) -> bool:
     """判断 token 是否已被吊销。"""
     if not payload:
         return False
@@ -208,27 +190,18 @@ def is_token_revoked(payload: Optional[dict]) -> bool:
     if not jti:
         return False
 
-    redis_revoked = _check_token_in_redis_sync(str(jti))
+    redis_revoked = await _check_token_in_redis(str(jti))
     if redis_revoked:
         return True
 
-    if _redis_blacklist_available:
-        _cleanup_revoked_tokens()
-        with _revoked_jti_lock:
-            expire_at = _revoked_jti_store.get(str(jti))
-        if not expire_at:
-            return False
-        return expire_at > datetime.now(timezone.utc)
-
     _cleanup_revoked_tokens()
-    with _revoked_jti_lock:
-        expire_at = _revoked_jti_store.get(str(jti))
+    expire_at = _revoked_jti_store.get(str(jti))
     if not expire_at:
         return False
     return expire_at > datetime.now(timezone.utc)
 
 
-def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security_bearer)) -> dict:
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security_bearer)) -> dict:
     """验证 JWT 令牌依赖"""
     if not credentials:
         raise HTTPException(
@@ -246,7 +219,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security_be
             detail="无效的认证凭证",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    if is_token_revoked(payload):
+    if await is_token_revoked(payload):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="令牌已失效，请重新登录",
@@ -271,9 +244,11 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security_be
     return payload
 
 
-def verify_refresh_token(token: str) -> Optional[dict]:
+async def verify_refresh_token(token: str) -> Optional[dict]:
     """验证刷新令牌"""
     payload = decode_token(token)
-    if payload is None or payload.get("type") != "refresh" or is_token_revoked(payload):
+    if payload is None or payload.get("type") != "refresh":
+        return None
+    if await is_token_revoked(payload):
         return None
     return payload

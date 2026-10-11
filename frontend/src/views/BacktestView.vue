@@ -5,6 +5,8 @@
       <el-button type="primary" @click="openCreate">新建回测</el-button>
     </div>
 
+    <BacktestOptimizationStatus />
+
     <el-card shadow="never">
       <el-table v-if="tableReady" :data="list" stripe v-loading="loading">
         <el-table-column prop="name" label="名称" min-width="160" />
@@ -18,7 +20,7 @@
         <el-table-column prop="end_date" label="结束" width="120" />
         <el-table-column label="总收益" width="110">
           <template #default="{ row }">
-            {{ formatPct(row.total_return) }}
+            {{ formatPercent(row.total_return, 2, false) }}
           </template>
         </el-table-column>
         <el-table-column label="夏普" width="90">
@@ -160,6 +162,7 @@ import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import BacktestEquityCurve from '@/components/charts/BacktestEquityCurve.vue'
+import BacktestOptimizationStatus from '@/components/backtest/BacktestOptimizationStatus.vue'
 import {
   getBacktestList,
   createBacktest,
@@ -168,6 +171,7 @@ import {
   getBacktestResult
 } from '@/api/backtest'
 import { getStrategyList } from '@/api/strategy'
+import { formatPercent, formatMetricPct, getChangeClass } from '@/utils/format'
 
 const route = useRoute()
 
@@ -220,27 +224,7 @@ const statusTag = (s: string): 'primary' | 'success' | 'warning' | 'danger' | 'i
   return m[s] || 'info'
 }
 
-const formatPct = (v: any) => {
-  if (v == null) return '-'
-  const n = Number(v)
-  if (Number.isNaN(n)) return '-'
-  return `${(n * 100).toFixed(2)}%`
-}
-
-const formatMetricPct = (v: any) => {
-  if (v == null || v === undefined) return '-'
-  const n = Number(v)
-  if (Number.isNaN(n)) return '-'
-  return `${n.toFixed(2)}%`
-}
-
-const getChangeClass = (v: any) => {
-  if (v == null) return ''
-  const n = Number(v)
-  if (n > 0) return 'up'
-  if (n < 0) return 'down'
-  return ''
-}
+// formatPercent, formatMetricPct, getChangeClass imported from @/utils/format
 
 const fetchList = async () => {
   loading.value = true
@@ -367,7 +351,9 @@ const remove = (row: any) => {
       ElMessage.success('已删除')
       fetchList()
     })
-    .catch(() => {})
+    .catch((e: unknown) => {
+      if (e !== 'cancel') ElMessage.error('删除失败')
+    })
 }
 
 const startPolling = () => {

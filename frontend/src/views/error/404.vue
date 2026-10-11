@@ -30,10 +30,17 @@ const goHome = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--el-fill-color-light);
+  padding: 24px;
+  background: var(--bg-cream);
 }
 
 .error-content {
+  width: min(100%, 560px);
+  padding: 44px 32px;
+  border: 1px solid var(--line-soft);
+  border-top: 2px solid var(--primary-500);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-base);
   text-align: center;
   
   .error-code {
@@ -54,6 +61,16 @@ const goHome = () => {
     font-size: 14px;
     color: var(--el-text-color-secondary);
     margin-bottom: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .error-content {
+    padding: 36px 20px;
+  }
+
+  .error-content .error-code {
+    font-size: 88px;
   }
 }
 </style>

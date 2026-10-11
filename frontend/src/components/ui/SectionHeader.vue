@@ -44,9 +44,9 @@ defineProps<{
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(37, 99, 235, 0.12);
+  background: var(--primary-50);
   border: 1px solid var(--line-strong);
-  color: #ffe9e4;
+  color: var(--primary-700);
   font-size: 17px;
 }
 

@@ -10,6 +10,7 @@ export const useMarketData = () => {
   const total = ref(0)
   const industries = ref<string[]>([])
   const currentSource = ref('')
+  const usingFallbackData = ref(false)
 
   const currentPage = ref(1)
   const pageSize = ref(20)
@@ -28,11 +29,14 @@ export const useMarketData = () => {
         search: searchQuery.value
       })
       const payload = (res as { data?: MarketPayload }).data
+      usingFallbackData.value = false
       stockList.value = payload?.rows ?? []
       total.value = Number(payload?.total ?? stockList.value.length ?? 0)
       currentSource.value = payload?.source || ''
     } catch {
       ElMessage.error('获取股票列表失败')
+      usingFallbackData.value = true
+      currentSource.value = ''
       stockList.value = [
         { symbol: '000001', name: '平安银行', exchange: 'SZSE', industry: '银行', market: '主板' },
         { symbol: '000002', name: '万科A', exchange: 'SZSE', industry: '房地产', market: '主板' },
@@ -75,6 +79,7 @@ export const useMarketData = () => {
     total,
     industries,
     currentSource,
+    usingFallbackData,
     currentPage,
     pageSize,
     searchQuery,

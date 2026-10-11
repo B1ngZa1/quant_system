@@ -1,0 +1,18 @@
+{
+  "dataset_id": "US_TREASURY_DAILY_PAR_YIELD_CURVE_2025",
+  "source_url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2025/all?type=daily_treasury_yield_curve&field_tdr_date_value=2025&page&_format=csv",
+  "source_access_date": "2026-09-22",
+  "raw_relative_path": "research/datasets/raw/treasury_daily_par_yield_curve_2025_source.csv",
+  "raw_bytes": 20155,
+  "raw_sha256": "CF2FA3DA7F160384B63D2EAD698532B1D76CD9F789CE4911E2304DB85B14E6D5",
+  "raw_daily_rows": 249,
+  "normalized_rows": 3486,
+  "expected_rows": 3486,
+  "observed_rows": 3455,
+  "source_missing_or_not_applicable_rows": 31,
+  "source_missing_or_not_applicable_rate": 0.00889271371199082,
+  "observation_date_min": "2025-01-02",
+  "observation_date_max": "2025-12-31",
+  "tenor_count": 14,
+  "normalization_policy": "Long-form reshape only; numeric values retain source precision and source N/A remains blank with an explicit quality flag."
+}

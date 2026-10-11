@@ -15,12 +15,15 @@ _FORBIDDEN_SECRET_KEYS = frozenset(
         "",
         "your-super-secret-key-change-in-production",
         "dev-secret-key-change-me",
+        "replace_with_secure_secret",
+        "dev-only-insecure-secret-key-change-in-env-file",
     }
 )
 _FORBIDDEN_DB_PASSWORDS = frozenset(
     {
         "",
         "quant_password",
+        "change_me",
     }
 )
 
@@ -54,7 +57,7 @@ class Settings(BaseSettings):
     CORS_ALLOW_METHODS: List[str] = ["*"]
     CORS_ALLOW_HEADERS: List[str] = ["*"]
 
-    # 数据库配置 - PostgreSQL / TimescaleDB
+    # 数据库配置 - PostgreSQL / TimescaleDB (主数据库)
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str = "quant_user"
@@ -63,19 +66,10 @@ class Settings(BaseSettings):
     POSTGRES_POOL_SIZE: int = 20
     POSTGRES_MAX_OVERFLOW: int = 10
 
-    # 数据库配置 - MySQL (如果 DATABASE_TYPE=mysql 时使用)
-    MYSQL_HOST: str = "localhost"
-    MYSQL_PORT: int = 3306
-    MYSQL_USER: str = "quant_user"
-    MYSQL_PASSWORD: str = ""
-    MYSQL_DATABASE: str = "quant_db"
-    MYSQL_POOL_SIZE: int = 20
-    MYSQL_MAX_OVERFLOW: int = 10
-
-    # 数据库配置 - SQLite (备用)
-    SQLITE_URL: str = "sqlite+aiosqlite:///./data/quant.db"
-    # 数据库类型：postgres/mysql/sqlite
-    DATABASE_TYPE: str = "postgres"
+    # DuckDB 配置 (分析引擎，用于高速聚合查询与回测)
+    DUCKDB_PATH: str = "./data/quant_analytics.duckdb"
+    DUCKDB_MEMORY_LIMIT: str = "2GB"
+    DUCKDB_THREADS: int = 4
 
     # Redis 配置
     REDIS_HOST: str = "localhost"
@@ -205,7 +199,7 @@ class Settings(BaseSettings):
 
     @property
     def postgres_url(self) -> str:
-        """生成 PostgreSQL 数据库 URL"""
+        """生成 PostgreSQL 异步数据库 URL"""
         return (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -220,25 +214,13 @@ class Settings(BaseSettings):
         )
 
     @property
-    def mysql_url(self) -> str:
-        """生成 MySQL 数据库 URL"""
-        return (
-            f"mysql+aiomysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
-            f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
-        )
-
-    @property
-    def sync_mysql_url(self) -> str:
-        """生成同步 MySQL 数据库 URL"""
-        return (
-            f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
-            f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
-        )
-
-    @property
-    def sync_sqlite_url(self) -> str:
-        """生成同步 SQLite 数据库 URL（供 Alembic 使用）"""
-        return self.SQLITE_URL.replace("+aiosqlite", "")
+    def duckdb_path(self) -> Path:
+        """DuckDB 数据库文件绝对路径。"""
+        p = Path(self.DUCKDB_PATH)
+        if p.is_absolute():
+            return p
+        # 相对于 backend 根目录
+        return Path(__file__).resolve().parents[2] / p
 
     @property
     def local_data_path(self) -> Path:

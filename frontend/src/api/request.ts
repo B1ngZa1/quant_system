@@ -281,6 +281,7 @@ const handleError = (code: number, message: string): void => {
   }
 }
 
+// 响应拦截器返回解包后的数据；Axios 默认的响应类型不描述此运行时契约。
 // 封装请求方法
 export const request = {
   get<T = any>(
@@ -293,7 +294,7 @@ export const request = {
       params,
       ...config,
       cache: cacheConfig || { enabled: false }
-    })
+    }) as Promise<T>
   },
 
   // 带缓存的GET请求
@@ -311,49 +312,36 @@ export const request = {
         ttl,
         key: `api:${url}:${JSON.stringify(params || {})}`
       }
-    })
+    }) as Promise<T>
   },
 
   post<T = any>(url: string, data?: object, config?: AxiosRequestConfig): Promise<T> {
-    return service.post(url, data, config)
+    return service.post(url, data, config) as Promise<T>
   },
 
   put<T = any>(url: string, data?: object, config?: AxiosRequestConfig): Promise<T> {
-    return service.put(url, data, config)
+    return service.put(url, data, config) as Promise<T>
   },
 
   patch<T = any>(url: string, data?: object, config?: AxiosRequestConfig): Promise<T> {
-    return service.patch(url, data, config)
+    return service.patch(url, data, config) as Promise<T>
   },
 
   delete<T = any>(url: string, params?: object, config?: AxiosRequestConfig): Promise<T> {
-    return service.delete(url, { params, ...config })
+    return service.delete(url, { params, ...config }) as Promise<T>
   }
 }
 
 // 缓存清除工具
 export const clearApiCache = (pattern?: string): void => {
-  if (pattern) {
-    // 清除匹配的缓存
-    const allKeys: string[] = []
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      if (key?.startsWith('api:') && key.includes(pattern)) {
-        allKeys.push(key)
-      }
+  const keysToRemove: string[] = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key?.startsWith('api:') && (!pattern || key.includes(pattern))) {
+      keysToRemove.push(key)
     }
-    allKeys.forEach(key => localStorage.removeItem(key))
-  } else {
-    // 清除所有API缓存
-    const keysToRemove: string[] = []
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      if (key?.startsWith('api:')) {
-        keysToRemove.push(key)
-      }
-    }
-    keysToRemove.forEach(key => localStorage.removeItem(key))
   }
+  keysToRemove.forEach(key => localStorage.removeItem(key))
 }
 
 export default service

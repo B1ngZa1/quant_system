@@ -1,13 +1,20 @@
 <template>
   <div class="page-container">
-    <SectionHeader title="行情中心" subtitle="聚合行情检索与快速跳转详情" :icon="TrendCharts">
+    <SectionHeader title="行情中心" :subtitle="usingFallbackData ? '聚合行情检索与示例外观预览' : '聚合行情检索与快速跳转详情'" :icon="TrendCharts">
       <template #actions>
-        <StatusBadge v-if="currentSource" type="info" :label="`数据源: ${currentSource}`" />
+        <StatusBadge v-if="usingFallbackData" type="warning" label="示例数据 / 行情接口不可用" />
+        <StatusBadge v-else-if="currentSource" type="info" :label="`数据源: ${currentSource}`" />
+        <StatusBadge v-else-if="stockList.length > 0" type="warning" label="数据来源未标注" />
       </template>
     </SectionHeader>
+
+    <div class="market-intro">
+      <span class="market-intro__eyebrow">MARKET OVERVIEW</span>
+      <p>{{ usingFallbackData ? '当前仅显示示例行，详情跳转已禁用；可体验筛选区与列表布局。' : '按代码、名称、交易所或行业筛选标的；选择标的可继续查看行情详情。' }}</p>
+    </div>
     
     <UiCard class="market-card">
-      <div class="filter-section">
+      <div class="filter-section filter-panel">
         <el-input
           v-model="searchQuery"
           placeholder="搜索股票代码或名称"
@@ -38,7 +45,15 @@
           </el-radio-group>
         </div>
         <div v-if="viewMode === 'cards'" class="quote-card-list">
-          <article v-for="row in stockList" :key="row.symbol" class="quote-card" @click="goToDetail(row.symbol)">
+          <article
+            v-for="row in stockList"
+            :key="row.symbol"
+            class="quote-card"
+            :class="{ 'quote-card--static': usingFallbackData }"
+            :aria-disabled="usingFallbackData"
+            :title="usingFallbackData ? '示例行情暂不支持跳转详情' : '查看行情详情'"
+            @click="goToDetail(row.symbol)"
+          >
             <div class="quote-card__top">
               <strong>{{ row.symbol }}</strong>
               <span>{{ row.name || '—' }}</span>
@@ -51,10 +66,22 @@
           </article>
         </div>
         <Suspense v-else>
-          <MarketTablePanel :rows="stockList" @row-click="handleRowClick" @detail="goToDetail" />
+          <MarketTablePanel
+            :rows="stockList"
+            :navigation-disabled="usingFallbackData"
+            @row-click="handleRowClick"
+            @detail="goToDetail"
+          />
           <template #fallback><div class="table-loading">表格加载中...</div></template>
         </Suspense>
       </div>
+
+      <div class="results-summary">
+        <span class="results-summary__label">筛选结果</span>
+        <span class="results-summary__count">{{ total.toLocaleString() }}</span>
+        <span class="results-summary__unit">个标的</span>
+      </div>
+      <el-empty v-if="!loading && stockList.length === 0" description="没有找到匹配的标的" :image-size="88" />
       
       <div class="pagination-wrapper">
         <el-pagination
@@ -95,6 +122,7 @@ const {
   filterIndustry,
   industries,
   currentSource,
+  usingFallbackData,
   fetchStockList,
   fetchIndustries,
   handleSearch,
@@ -107,6 +135,7 @@ const handleRowClick = (row: { symbol: string }) => {
 }
 
 const goToDetail = (symbol: string) => {
+  if (usingFallbackData.value) return
   router.push(`/market/${symbol}`)
 }
 
@@ -116,11 +145,41 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.market-intro {
+  margin: -8px 0 18px;
+  padding: 14px 18px;
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--primary-500);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+
+.market-intro__eyebrow {
+  color: var(--primary-600);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.market-intro p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .filter-section {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 12px;
+}
+
+.filter-panel {
+  padding: 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--bg-panel-soft);
 }
 
 .view-switch {
@@ -142,10 +201,21 @@ onMounted(() => {
 
 .quote-card {
   border: 1px solid var(--line-soft);
-  border-radius: 12px;
-  padding: 10px 12px;
+  border-radius: 9px;
+  padding: 14px 16px;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-panel);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.quote-card:not(.quote-card--static):hover {
+  border-color: var(--primary-300);
+  box-shadow: var(--shadow-primary);
+  transform: translateY(-1px);
+}
+
+.quote-card--static {
+  cursor: default;
 }
 
 .quote-card__top {
@@ -167,5 +237,63 @@ onMounted(() => {
   padding: 20px;
   text-align: center;
   color: var(--text-muted);
+}
+
+.results-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 16px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.results-summary__label {
+  margin-right: 4px;
+}
+
+.results-summary__count {
+  color: var(--primary-600);
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.results-summary__unit {
+  color: var(--text-secondary);
+}
+
+:deep(.el-empty) {
+  padding: 22px 0;
+}
+
+@media (max-width: 600px) {
+  .market-intro {
+    padding: 12px 14px;
+  }
+
+  .filter-section :deep(.el-input),
+  .filter-section :deep(.el-select) {
+    width: 100% !important;
+  }
+
+  .filter-section :deep(.el-button) {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .quote-card {
+    padding: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quote-card {
+    transition: none;
+  }
+
+  .quote-card:not(.quote-card--static):hover {
+    transform: none;
+  }
 }
 </style>

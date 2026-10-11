@@ -1,0 +1,58 @@
+# Dependencies
+node_modules
+**/node_modules
+frontend/node_modules
+backend/__pycache__
+**/__pycache__
+**/*.pyc
+**/*.pyo
+
+# Build output
+frontend/dist
+**/dist
+**/*.egg-info
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+
+# Logs
+logs
+**/*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed in containers)
+docs
+*.md
+!README.md
+
+# Test files
+**/tests
+**/*.spec.ts
+**/*.test.ts
+
+# Development tools
+presentation
+daily_data
+*.bat
+Makefile
+
+# Docker (avoid recursive copy)
+docker-compose.yml
+**/Dockerfile
+**/.dockerignore

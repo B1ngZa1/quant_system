@@ -18,15 +18,11 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: Inter, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.6;
   color: var(--text-primary);
-  background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.15), transparent 24%),
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 22%),
-    linear-gradient(180deg, #0f172a 0%, #020617 46%, #000000 100%);
-  background-attachment: fixed;
+  background: var(--bg-cream);
 }
 
 #app {
@@ -63,18 +59,18 @@ a {
 // ============================================
 .el-button {
   font-weight: 500;
-  border-radius: var(--radius-lg);
-  transition: all var(--transition-base);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 
   &--primary {
-    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: var(--shadow-primary);
+    background: var(--primary-500);
+    border: 1px solid var(--primary-500);
+    box-shadow: none;
     color: #ffffff;
 
     &:hover {
       transform: translateY(-1px);
-      box-shadow: 0 10px 26px rgba(37, 99, 235, 0.34);
+      box-shadow: none;
     }
 
     &:active {
@@ -97,11 +93,11 @@ a {
 
 .el-input {
   &__wrapper {
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     box-shadow: none;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid transparent;
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 
     &:hover {
       background: rgba(255, 255, 255, 0.06);
@@ -125,25 +121,25 @@ a {
 }
 
 .el-card {
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   border: 1px solid var(--line-soft);
   box-shadow: var(--shadow-base);
   background: var(--bg-panel);
-  transition: all var(--transition-base);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
 
   &:hover {
-    box-shadow: var(--shadow-md);
+    border-color: var(--line-strong);
   }
 }
 
 .el-tag {
-  border-radius: var(--radius-base);
+  border-radius: var(--radius-sm);
   font-weight: 500;
 }
 
 .el-radio-button {
   &__inner {
-    border-radius: var(--radius-base) !important;
+    border-radius: var(--radius-sm) !important;
     background: rgba(255, 255, 255, 0.04) !important;
     border-color: var(--line-soft) !important;
     color: var(--text-secondary) !important;
@@ -151,9 +147,9 @@ a {
   }
 
   &.is-active .el-radio-button__inner {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(30, 64, 175, 0.32)) !important;
+    background: rgba(58, 123, 253, 0.16) !important;
     border-color: rgba(96, 165, 250, 0.3) !important;
-    color: #fff3ef !important;
+    color: var(--text-primary) !important;
   }
 }
 
@@ -162,7 +158,7 @@ a {
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid transparent !important;
   box-shadow: none !important;
-  border-radius: var(--radius-lg) !important;
+  border-radius: var(--radius-md) !important;
 
   &.is-focused,
   &:hover {
@@ -190,14 +186,14 @@ a {
 
 .el-dialog,
 .el-drawer {
-  --el-dialog-bg-color: #1b141a;
-  --el-drawer-bg-color: #1b141a;
+  --el-dialog-bg-color: var(--bg-panel-strong);
+  --el-drawer-bg-color: var(--bg-panel-strong);
   --el-text-color-primary: var(--text-primary);
   --el-text-color-regular: var(--text-secondary);
 }
 
 .el-message-box {
-  background: #1b141a !important;
+  background: var(--bg-panel-strong) !important;
   border: 1px solid var(--line-soft) !important;
 }
 

@@ -1,9 +1,9 @@
 <template>
-  <section class="market-section" v-loading="loading">
+  <section class="market-section" v-loading="status === 'loading'">
     <div class="section-head">
       <span class="section-head__title">主要指数</span>
     </div>
-    <div class="market-grid">
+    <div v-if="items.length" class="market-grid">
       <article
         v-for="item in items"
         :key="item.symbol"
@@ -25,12 +25,12 @@
             {{ item.change >= 0 ? '+' : '' }}{{ formatNumber(item.change) }}
           </span>
         </div>
-        <div class="mini-chart">
+        <div v-if="item.trend.length >= 2" class="mini-chart" aria-hidden="true">
           <svg viewBox="0 0 100 24" preserveAspectRatio="none">
             <path
               :d="generateSparkline(item.trend)"
               fill="none"
-              :stroke="item.change >= 0 ? '#dc2626' : '#16a34a'"
+              :stroke="item.change >= 0 ? 'var(--up-color)' : 'var(--down-color)'"
               stroke-width="1.5"
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -39,6 +39,10 @@
         </div>
       </article>
     </div>
+    <div v-else-if="status !== 'loading'" class="market-empty" role="status">
+      <span>{{ status === 'error' ? '指数行情暂时无法读取' : '当前没有可展示的指数行情' }}</span>
+      <router-link to="/data">检查数据工作台 <span aria-hidden="true">↗</span></router-link>
+    </div>
   </section>
 </template>
 
@@ -46,7 +50,7 @@
 import type { IndexCard } from './types'
 
 defineProps<{
-  loading: boolean
+  status: 'loading' | 'ready' | 'empty' | 'error'
   items: IndexCard[]
 }>()
 
@@ -70,54 +74,86 @@ const generateSparkline = (data: number[]) => {
 
 <style scoped lang="scss">
 .market-section {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  border: 1px solid var(--line-soft);
+  background: var(--bg-panel);
 }
 
 .section-head {
-  margin-bottom: 8px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .section-head__title {
-  font-size: 13px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .market-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 0;
+}
+
+.market-empty {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.market-empty a {
+  color: var(--primary-600);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.market-empty a:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 3px;
 }
 
 .market-card {
   position: relative;
-  padding: 10px 12px 26px;
-  background: linear-gradient(180deg, rgba(31, 23, 29, 0.96), rgba(21, 16, 20, 0.9));
-  border-radius: 12px;
-  border: 1px solid var(--line-soft);
-  box-shadow: var(--shadow-base);
+  min-height: 114px;
+  padding: 14px 14px 28px;
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--line-soft);
+  box-shadow: none;
   overflow: hidden;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
 }
 
 .market-card.up {
-  border-left: 2px solid #dc2626;
+  border-left: 2px solid var(--up-color);
 }
 
 .market-card.down {
-  border-left: 2px solid #16a34a;
+  border-left: 2px solid var(--down-color);
 }
 
 .market-card__top {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .market-card__name {
   display: block;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -134,8 +170,9 @@ const generateSparkline = (data: number[]) => {
 }
 
 .market-card__price {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .market-card__chg,
@@ -145,11 +182,11 @@ const generateSparkline = (data: number[]) => {
 }
 
 .up {
-  color: #dc2626;
+  color: var(--up-color);
 }
 
 .down {
-  color: #16a34a;
+  color: var(--down-color);
 }
 
 .mini-chart {
@@ -170,9 +207,18 @@ const generateSparkline = (data: number[]) => {
   .market-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .market-card:nth-child(2n) {
+    border-right: 0;
+  }
 }
 
 @media (max-width: 520px) {
+  .market-empty {
+    flex-direction: column;
+    gap: 5px;
+  }
+
   .market-grid {
     grid-template-columns: 1fr;
   }

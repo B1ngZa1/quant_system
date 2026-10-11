@@ -1,9 +1,8 @@
 from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
-import logging
 from enum import IntEnum
 
-logger = logging.getLogger(__name__)
+from app.core.logging import log as logger
 
 
 class ErrorCode(IntEnum):
@@ -15,6 +14,7 @@ class ErrorCode(IntEnum):
     FORBIDDEN = 4030
     NOT_FOUND = 4040
     VALIDATION_ERROR = 4220
+    SERVICE_UNAVAILABLE = 5030
     SERVER_ERROR = 5000
 
 

@@ -2,7 +2,7 @@
   <section class="activity-block">
     <div class="activity-block__head">
       <span class="activity-block__title">最近活动</span>
-      <el-link type="primary" :underline="false" class="activity-block__link" @click="$router.push('/backtest/list')">全部</el-link>
+      <el-link type="primary" underline="never" class="activity-block__link" @click="$router.push('/backtest/list')">全部</el-link>
     </div>
     <div class="activity-table">
       <div v-for="activity in activities" :key="activity.id" class="activity-row">
@@ -18,7 +18,7 @@
         <div class="activity-row__right">
           <span class="activity-row__time">{{ activity.time }}</span>
           <span v-if="activity.return !== undefined" class="activity-row__ret" :class="activity.return >= 0 ? 'up' : 'down'">
-            {{ activity.return >= 0 ? '+' : '' }}{{ formatPercent(activity.return) }}
+            {{ formatPercent(activity.return) }}
           </span>
         </div>
       </div>
@@ -50,21 +50,28 @@ const formatPercent = (num: number) => `${num >= 0 ? '+' : ''}${num.toFixed(2)}%
 
 <style scoped lang="scss">
 .activity-block {
-  background: linear-gradient(180deg, rgba(31, 23, 29, 0.96), rgba(21, 16, 20, 0.9));
-  border-radius: 12px;
-  padding: 10px 14px 12px;
+  background: var(--bg-panel);
+  border-radius: 0;
+  padding: 14px;
   border: 1px solid var(--line-soft);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+
+  &:hover {
+    border-color: var(--line-strong);
+    background: var(--surface-hover);
+  }
 }
 
 .activity-block__head {
   display: flex;
   justify-content: space-between;
+  min-height: 24px;
   margin-bottom: 8px;
 }
 
 .activity-block__title {
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -72,8 +79,15 @@ const formatPercent = (num: number) => `${num >= 0 ? '+' : ''}${num.toFixed(2)}%
   display: grid;
   grid-template-columns: 26px 1fr auto;
   gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 10px 8px;
+  margin: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line-soft);
+  transition: background-color var(--transition-fast);
+
+  &:hover {
+    background: var(--surface-hover);
+  }
 }
 
 .activity-row:last-child {
@@ -90,18 +104,18 @@ const formatPercent = (num: number) => `${num >= 0 ? '+' : ''}${num.toFixed(2)}%
 }
 
 .activity-row__icon.success {
-  background: rgba(37, 99, 235, 0.08);
-  color: #dc2626;
+  background: rgba(32, 170, 130, 0.14);
+  color: var(--success-500);
 }
 
 .activity-row__icon.running {
-  background: #fffbeb;
-  color: #d97706;
+  background: rgba(229, 184, 92, 0.14);
+  color: var(--warning-500);
 }
 
 .activity-row__icon.info {
-  background: #eff6ff;
-  color: #2563eb;
+  background: rgba(123, 183, 232, 0.14);
+  color: var(--info-500);
 }
 
 .activity-row__title {
@@ -125,10 +139,10 @@ const formatPercent = (num: number) => `${num >= 0 ? '+' : ''}${num.toFixed(2)}%
 }
 
 .up {
-  color: #dc2626;
+  color: var(--up-color);
 }
 
 .down {
-  color: #16a34a;
+  color: var(--down-color);
 }
 </style>

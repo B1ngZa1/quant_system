@@ -2,7 +2,7 @@
   <Teleport to="body">
     <Transition name="palette">
       <div v-if="visible" class="palette-overlay" @click.self="$emit('close')">
-        <div class="palette" @keydown.esc="$emit('close')">
+        <div class="palette" role="dialog" aria-modal="true" aria-label="命令面板" @keydown.esc="$emit('close')">
           <div class="palette-input-wrap">
             <el-icon class="palette-icon"><Search /></el-icon>
             <input
@@ -10,6 +10,7 @@
               v-model="query"
               class="palette-input"
               placeholder="输入命令或搜索..."
+              aria-label="输入命令或搜索"
               autofocus
             />
             <kbd class="palette-kbd">ESC</kbd>
@@ -82,7 +83,10 @@ function execute(item: CommandItem) {
 
 function onKeydown(e: KeyboardEvent) {
   if (!props.visible) return
-  if (e.key === 'ArrowDown') {
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    emit('close')
+  } else if (e.key === 'ArrowDown') {
     e.preventDefault()
     selectedIndex.value = Math.min(selectedIndex.value + 1, filtered.value.length - 1)
   } else if (e.key === 'ArrowUp') {
@@ -108,14 +112,14 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   align-items: flex-start;
   justify-content: center;
   padding-top: 18vh;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--overlay-backdrop);
   backdrop-filter: blur(6px);
 }
 
 .palette {
   width: min(560px, 92vw);
   max-height: 420px;
-  background: rgba(31, 23, 29, 0.97);
+  background: var(--bg-panel-strong);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
@@ -146,13 +150,18 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   color: var(--text-primary);
 
   &::placeholder { color: var(--text-muted); }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-400);
+    outline-offset: 3px;
+  }
 }
 
 .palette-kbd {
   padding: 2px 8px;
   border-radius: 6px;
   font-size: 11px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-panel-soft);
   border: 1px solid var(--line-soft);
   color: var(--text-muted);
 }
@@ -178,8 +187,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   transition: background var(--transition-fast);
 
   &:hover, &.active {
-    background: rgba(59, 130, 246, 0.12);
-    color: var(--text-primary);
+    background: var(--primary-50);
+    color: var(--primary-700);
   }
 
   &__icon { font-size: 16px; color: var(--text-muted); }
@@ -189,13 +198,13 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
     color: var(--text-muted);
     padding: 1px 8px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-panel-soft);
   }
   &__kbd {
     padding: 1px 6px;
     border-radius: 4px;
     font-size: 11px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--bg-panel-soft);
     border: 1px solid var(--line-soft);
     color: var(--text-muted);
   }

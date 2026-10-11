@@ -46,32 +46,32 @@ const normalizedType = computed(() => props.type || 'info')
 }
 
 .status-badge--primary {
-  color: #ffd5cf;
-  background: rgba(37, 99, 235, 0.14);
-  border-color: rgba(96, 165, 250, 0.3);
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
 }
 
 .status-badge--success {
-  color: #c6f6dc;
-  background: rgba(16, 185, 129, 0.16);
-  border-color: rgba(16, 185, 129, 0.32);
+  color: var(--success-text);
+  background: var(--success-bg);
+  border-color: var(--success-border);
 }
 
 .status-badge--warning {
-  color: #ffe7bf;
-  background: rgba(245, 158, 11, 0.16);
-  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
 }
 
 .status-badge--danger {
-  color: #ffd9e0;
-  background: rgba(251, 113, 133, 0.16);
-  border-color: rgba(251, 113, 133, 0.3);
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
 }
 
 .status-badge--info {
-  color: var(--text-secondary);
-  background: rgba(148, 163, 184, 0.14);
-  border-color: rgba(148, 163, 184, 0.3);
+  color: var(--info-text);
+  background: var(--info-bg);
+  border-color: var(--info-border);
 }
 </style>

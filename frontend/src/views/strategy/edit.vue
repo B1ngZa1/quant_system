@@ -316,14 +316,16 @@ const askAI = async () => {
     const code = res?.data?.code || res?.data?.strategy_code || res?.data?.suggestion || ''
     if (code) {
       form.code = code
+      ElMessage.success('AI策略建议已生成')
     } else {
       form.code = `# AI 建议\n# 需求: ${aiPrompt.value}\n# 请根据 AI 返回结果手动调整策略代码\n\ndef initialize(context):\n    pass\n\ndef handle_data(context, data):\n    pass`
+      ElMessage.success('AI策略建议已生成，请根据返回结果手动调整')
     }
   } catch {
     form.code = `# AI 生成失败，请手动编写\n# 需求: ${aiPrompt.value}\n\ndef initialize(context):\n    pass\n\ndef handle_data(context, data):\n    pass`
+    ElMessage.error('AI策略建议生成失败，请手动编写')
   } finally {
     aiLoading.value = false
-    ElMessage.success('AI策略建议已生成')
   }
 }
 

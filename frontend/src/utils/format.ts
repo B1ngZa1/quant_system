@@ -44,6 +44,23 @@ export const getChangeColor = (value: number): string => {
   return 'neutral'
 }
 
+// 格式化指标百分比（值已经是百分比形式，不需要乘100）
+export const formatMetricPct = (value: number | null | undefined, decimals = 2): string => {
+  if (value == null) return '-'
+  const n = Number(value)
+  if (Number.isNaN(n)) return '-'
+  return `${n.toFixed(decimals)}%`
+}
+
+// 获取涨跌 CSS 类名
+export const getChangeClass = (value: number | null | undefined): '' | 'up' | 'down' => {
+  if (value == null) return ''
+  const n = Number(value)
+  if (n > 0) return 'up'
+  if (n < 0) return 'down'
+  return ''
+}
+
 // 格式化日期
 export const formatDate = (date: string | Date, format = 'YYYY-MM-DD'): string => {
   if (!date) return '-'

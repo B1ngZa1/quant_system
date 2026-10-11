@@ -1,8 +1,7 @@
 """回测API v2.0 - 完善的回测系统接口"""
 from typing import Any, Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
-import math
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select, func, desc, and_
@@ -21,7 +20,11 @@ from app.schemas.backtest import (
     BacktestListParams,
 )
 from app.schemas.base import DataResponse, ListResponse, SuccessResponse
-from app.services.backtest_service import get_backtest_service
+from app.utils.crud import get_owned_item, paginate_query
+from app.services.backtest_service import (
+    RESEARCH_OPTIMIZATION_UNAVAILABLE_DETAIL,
+    get_backtest_service,
+)
 from app.services.multi_factor_backtest import (
     CommonFactors,
 )
@@ -105,38 +108,27 @@ async def list_backtests(
     """获取回测列表"""
     query = select(Backtest).where(Backtest.user_id == current_user.id)
     count_query = select(func.count(Backtest.id)).where(Backtest.user_id == current_user.id)
-    
+
     if params.strategy_id:
         query = query.where(Backtest.strategy_id == params.strategy_id)
         count_query = count_query.where(Backtest.strategy_id == params.strategy_id)
-    
+
     if params.status:
         query = query.where(Backtest.status == params.status)
         count_query = count_query.where(Backtest.status == params.status)
-    
+
     if params.start_date:
         query = query.where(Backtest.start_date >= params.start_date)
         count_query = count_query.where(Backtest.start_date >= params.start_date)
-    
+
     if params.end_date:
         query = query.where(Backtest.end_date <= params.end_date)
         count_query = count_query.where(Backtest.end_date <= params.end_date)
-    
+
     query = query.order_by(desc(Backtest.created_at))
-    
-    count_result = await db.execute(count_query)
-    total = count_result.scalar()
-    
-    query = query.offset(params.offset).limit(params.page_size)
-    result = await db.execute(query)
-    backtests = result.scalars().all()
-    
-    return ListResponse(
-        data=[BacktestResponse.model_validate(b) for b in backtests],
-        total=total,
-        page=params.page,
-        page_size=params.page_size
-    )
+
+    result = await paginate_query(db, query, count_query, params.page, params.page_size, BacktestResponse)
+    return ListResponse(**result)
 
 
 @router.post("/create", response_model=DataResponse[BacktestResponse])
@@ -229,20 +221,7 @@ async def get_backtest(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """获取回测详情"""
-    result = await db.execute(
-        select(Backtest).where(
-            Backtest.id == backtest_id,
-            Backtest.user_id == current_user.id
-        )
-    )
-    backtest = result.scalar_one_or_none()
-    
-    if not backtest:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="回测不存在"
-        )
-    
+    backtest = await get_owned_item(db, Backtest, backtest_id, current_user.id, "回测不存在")
     return DataResponse(data=BacktestResponse.model_validate(backtest))
 
 
@@ -267,20 +246,8 @@ async def get_backtest_result(
     if cached:
         return DataResponse(data=cached)
     
-    result = await db.execute(
-        select(Backtest).where(
-            Backtest.id == backtest_id,
-            Backtest.user_id == current_user.id
-        )
-    )
-    backtest = result.scalar_one_or_none()
-    
-    if not backtest:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="回测不存在"
-        )
-    
+    backtest = await get_owned_item(db, Backtest, backtest_id, current_user.id, "回测不存在")
+
     if backtest.status != BacktestStatus.COMPLETED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -471,14 +438,13 @@ async def compare_backtests(
 @router.post("/optimize", response_model=DataResponse[dict])
 async def optimize_strategy(
     request: StrategyOptimizeRequest,
-    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """
-    策略参数优化
-    
-    使用网格搜索寻找最优参数组合
+    策略参数优化入口。
+
+    当前仅保留权限/归属校验；在研究优化任务能够端到端执行前，明确返回不可用状态。
     """
     # 验证原回测
     stmt = select(Backtest).where(
@@ -496,17 +462,12 @@ async def optimize_strategy(
             detail="原回测不存在"
         )
     
-    # TODO: 实现参数优化后台任务
-    # 这里返回优化任务信息
-    
-    return DataResponse(data={
-        "message": "策略优化功能已提交",
-        "original_backtest_id": request.backtest_id,
-        "param_grid": request.param_grid,
-        "estimated_runs": math.prod(len(v) for v in request.param_grid.values()),
-        "status": "pending",
-        "note": "参数优化是计算密集型任务，建议使用遗传算法或贝叶斯优化提升效率"
-    })
+    # Do not report a queued job until there is a reproducible research-only
+    # worker that can execute every parameterized run and validate its output.
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail=RESEARCH_OPTIMIZATION_UNAVAILABLE_DETAIL,
+    )
 
 
 @router.get("/status/slippage-models", response_model=DataResponse[dict])
@@ -620,19 +581,7 @@ async def update_backtest(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """更新回测信息（仅允许修改名称和描述）"""
-    result = await db.execute(
-        select(Backtest).where(
-            Backtest.id == backtest_id,
-            Backtest.user_id == current_user.id
-        )
-    )
-    backtest = result.scalar_one_or_none()
-    
-    if not backtest:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="回测不存在"
-        )
+    backtest = await get_owned_item(db, Backtest, backtest_id, current_user.id, "回测不存在")
     
     update_data = backtest_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -651,19 +600,7 @@ async def delete_backtest(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """删除回测"""
-    result = await db.execute(
-        select(Backtest).where(
-            Backtest.id == backtest_id,
-            Backtest.user_id == current_user.id
-        )
-    )
-    backtest = result.scalar_one_or_none()
-    
-    if not backtest:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="回测不存在"
-        )
+    backtest = await get_owned_item(db, Backtest, backtest_id, current_user.id, "回测不存在")
     
     await db.delete(backtest)
     await db.commit()
@@ -679,19 +616,7 @@ async def rerun_backtest(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """重新运行回测"""
-    result = await db.execute(
-        select(Backtest).where(
-            Backtest.id == backtest_id,
-            Backtest.user_id == current_user.id
-        )
-    )
-    backtest = result.scalar_one_or_none()
-    
-    if not backtest:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="回测不存在"
-        )
+    backtest = await get_owned_item(db, Backtest, backtest_id, current_user.id, "回测不存在")
     
     # 重置状态
     backtest.status = BacktestStatus.PENDING
@@ -715,19 +640,7 @@ async def stop_backtest(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """停止正在运行的回测"""
-    result = await db.execute(
-        select(Backtest).where(
-            Backtest.id == backtest_id,
-            Backtest.user_id == current_user.id
-        )
-    )
-    backtest = result.scalar_one_or_none()
-    
-    if not backtest:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="回测不存在"
-        )
+    backtest = await get_owned_item(db, Backtest, backtest_id, current_user.id, "回测不存在")
     
     if backtest.status != BacktestStatus.RUNNING:
         raise HTTPException(
@@ -796,21 +709,9 @@ async def generate_report(
     - format=html: 返回HTML格式报告 (可直接渲染)
     """
     from app.services.backtest_reporter import generate_backtest_report
-    
+
     # 验证权限
-    result = await db.execute(
-        select(Backtest).where(
-            Backtest.id == backtest_id,
-            Backtest.user_id == current_user.id
-        )
-    )
-    backtest = result.scalar_one_or_none()
-    
-    if not backtest:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="回测不存在"
-        )
+    backtest = await get_owned_item(db, Backtest, backtest_id, current_user.id, "回测不存在")
     
     if backtest.status != BacktestStatus.COMPLETED:
         raise HTTPException(

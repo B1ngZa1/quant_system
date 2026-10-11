@@ -4,6 +4,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { CHART_COLORS as chartColors } from '@/utils/echarts'
 import { useChart } from '@/composables/useChart'
 
 type KlineRow = {
@@ -65,29 +66,29 @@ function buildOption(rows: KlineRow[]) {
         type: 'category',
         data: dates,
         boundaryGap: true,
-        axisLine: { lineStyle: { color: '#94a3b8' } },
-        axisLabel: { color: '#64748b', fontSize: 11 },
+        axisLine: { lineStyle: { color: chartColors.axis } },
+        axisLabel: { color: chartColors.axisLabel, fontSize: 11 },
       },
       {
         type: 'category',
         gridIndex: 1,
         data: dates,
         boundaryGap: true,
-        axisLine: { lineStyle: { color: '#94a3b8' } },
+        axisLine: { lineStyle: { color: chartColors.axis } },
         axisLabel: { show: false },
       },
     ],
     yAxis: [
       {
         scale: true,
-        splitLine: { lineStyle: { color: 'rgba(148,163,184,0.25)' } },
-        axisLabel: { color: '#64748b' },
+        splitLine: { lineStyle: { color: chartColors.grid } },
+        axisLabel: { color: chartColors.axisLabel },
       },
       {
         scale: true,
         gridIndex: 1,
         splitNumber: 2,
-        axisLabel: { color: '#64748b', fontSize: 10 },
+        axisLabel: { color: chartColors.axisLabel, fontSize: 10 },
         splitLine: { show: false },
       },
     ],
@@ -100,7 +101,7 @@ function buildOption(rows: KlineRow[]) {
         bottom: '2%',
         height: 20,
         borderColor: 'transparent',
-        fillerColor: 'rgba(59,130,246,0.2)',
+        fillerColor: chartColors.primaryWash,
       },
     ],
     series: [
@@ -109,10 +110,10 @@ function buildOption(rows: KlineRow[]) {
         type: 'candlestick',
         data: values,
         itemStyle: {
-          color: '#ef4444',
-          color0: '#22c55e',
-          borderColor: '#ef4444',
-          borderColor0: '#22c55e',
+          color: chartColors.up,
+          color0: chartColors.down,
+          borderColor: chartColors.up,
+          borderColor0: chartColors.down,
         },
         xAxisIndex: 0,
         yAxisIndex: 0,
@@ -123,7 +124,11 @@ function buildOption(rows: KlineRow[]) {
         xAxisIndex: 1,
         yAxisIndex: 1,
         data: vols,
-        itemStyle: { color: 'rgba(59,130,246,0.45)' },
+        itemStyle: {
+          color: (params: { dataIndex: number }) => rows[params.dataIndex]?.close >= rows[params.dataIndex]?.open
+            ? chartColors.upLight
+            : chartColors.downLight,
+        },
       },
     ],
   }
@@ -135,11 +140,12 @@ function buildOptionFromProps() {
 
 const { chart } = useChart(chartRef as any, buildOptionFromProps)
 
+// 仅监听引用变化（父组件替换数组），不做 deep 避免大数组逐项比对开销
 watch(() => props.rows, () => {
   if (chart.value && props.rows.length) {
     chart.value.setOption(buildOption(props.rows), true)
   }
-}, { deep: true })
+})
 </script>
 
 <style scoped>

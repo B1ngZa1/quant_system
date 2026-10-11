@@ -95,8 +95,9 @@ def test_production_requires_cors_origins():
         Settings(
             ENVIRONMENT="production",
             SECRET_KEY="x" * 32,
-            MYSQL_PASSWORD="strong-password",
+            POSTGRES_PASSWORD="strong-password",
             CORS_ORIGINS=[],
+            _env_file=None,
         )
 
 
@@ -105,6 +106,7 @@ def test_production_disallows_localhost_origins():
         Settings(
             ENVIRONMENT="production",
             SECRET_KEY="x" * 32,
-            MYSQL_PASSWORD="strong-password",
+            POSTGRES_PASSWORD="strong-password",
             CORS_ORIGINS=["http://localhost:3000"],
+            _env_file=None,
         )

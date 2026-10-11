@@ -249,10 +249,13 @@ async def get_kline_data(
             start_date = end_date - timedelta(days=365)
     
     cache_key = f"stock:kline:{symbol}:{period}:{start_date}:{end_date}"
-    
+
     cached_data = await cache.get(cache_key)
     if cached_data:
-        return DataResponse(data=_normalize_kline_contract(cached_data))
+        try:
+            return DataResponse(data=_normalize_kline_contract(cached_data))
+        except Exception:
+            pass  # Cache corrupted, fall through to DB query
     
     query = select(StockData).where(
         and_(

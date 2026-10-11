@@ -16,12 +16,12 @@
               </defs>
             </svg>
           </div>
-          <h1 class="logo-text">Quant Trade</h1>
+          <h1 class="logo-text">Quant System</h1>
         </div>
 
         <div class="slogan">
-          <h2 class="slogan-title">智能量化交易<br>让投资更简单</h2>
-          <p class="slogan-desc">专业的策略回测与实盘交易系统</p>
+          <h2 class="slogan-title">量化研究工作台<br>让决策更有据</h2>
+          <p class="slogan-desc">汇集策略研究、历史回测与风险观察</p>
         </div>
 
         <div class="features">
@@ -41,7 +41,7 @@
             <div class="feature-icon">
               <el-icon><Timer /></el-icon>
             </div>
-            <StatusBadge type="warning" label="实时监控预警" />
+            <StatusBadge type="warning" label="数据状态追踪" />
           </div>
         </div>
       </div>
@@ -231,7 +231,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #20151b 0%, #171117 50%, #120d12 100%);
+  background: linear-gradient(135deg, var(--bg-warm) 0%, var(--bg-panel) 56%, var(--primary-50) 100%);
   padding: 60px;
 
   .brand-content {
@@ -260,7 +260,7 @@ onMounted(() => {
     .logo-text {
       font-size: 26px;
       font-weight: 700;
-      background: linear-gradient(135deg, #f26d6d, #d84a4a);
+      background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -300,7 +300,7 @@ onMounted(() => {
         width: 36px;
         height: 36px;
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--bg-panel-soft);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -322,14 +322,15 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #150f14;
+  background: var(--bg-cream);
   padding: 40px;
 
   .form-container {
     width: 100%;
     max-width: 360px;
-    background: rgba(31, 23, 29, 0.92);
+    background: var(--bg-panel);
     border-color: var(--line-soft);
+    box-shadow: var(--shadow-base);
   }
 
   .form-header {
@@ -378,7 +379,7 @@ onMounted(() => {
 
     :deep(.custom-input) {
       .el-input__wrapper {
-        background: #f9fafb;
+        background: var(--bg-panel-soft);
         border: 2px solid transparent;
         border-radius: 12px;
         padding: 10px 14px;
@@ -386,8 +387,8 @@ onMounted(() => {
         transition: all 0.2s;
 
         &.is-focus {
-          border-color: rgba(96, 165, 250, 0.38);
-          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+          border-color: rgba(242, 109, 109, 0.38);
+          box-shadow: 0 0 0 3px rgba(242, 109, 109, 0.12);
         }
       }
 
@@ -398,7 +399,7 @@ onMounted(() => {
 
       .el-input__icon {
         font-size: 18px;
-        color: #9ca3af;
+        color: var(--text-muted);
       }
     }
 
@@ -411,8 +412,8 @@ onMounted(() => {
             width: 16px;
             height: 16px;
             border-radius: 4px;
-            border-color: #d1d5db;
-            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--line-soft);
+            background: var(--bg-panel-soft);
           }
 
           &.is-checked .el-checkbox__inner {
@@ -438,7 +439,7 @@ onMounted(() => {
       font-size: 15px;
       font-weight: 600;
       border-radius: 12px;
-      background: linear-gradient(135deg, #f26d6d, #d84a4a);
+      background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
       border: none;
       box-shadow: var(--shadow-primary);
     }
@@ -454,7 +455,7 @@ onMounted(() => {
       content: '';
       flex: 1;
       height: 1px;
-      background: #e5e7eb;
+      background: var(--line-soft);
     }
 
     .divider-text {
@@ -474,12 +475,11 @@ onMounted(() => {
       justify-content: center;
       gap: 8px;
       padding: 11px;
-      background: white;
-      border: 1px solid #e5e7eb;
+      background: var(--bg-panel-soft);
+      border: 1px solid var(--line-soft);
       border-radius: 12px;
       cursor: pointer;
       font-size: 14px;
-      color: #374151;
       color: var(--text-secondary);
 
       .social-icon {
@@ -501,10 +501,13 @@ onMounted(() => {
       color: var(--text-secondary);
 
       .register-link {
-        color: #ff6b6b;
-        color: var(--primary-400);
+        color: var(--primary-600);
         font-weight: 600;
         text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
       }
     }
   }

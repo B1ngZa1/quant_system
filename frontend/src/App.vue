@@ -2,19 +2,11 @@
   <el-config-provider :locale="zhCn" size="default" :z-index="3000">
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">
-        <Suspense>
-          <component :is="Component" />
-          <template #fallback>
-            <div class="route-loading">
-              <div class="route-loading__spinner"></div>
-              <span class="route-loading__text">页面加载中...</span>
-            </div>
-          </template>
-        </Suspense>
+        <component :is="Component" />
       </transition>
     </router-view>
-    <WebVitalsPanel v-if="showVitalsPanel" />
   </el-config-provider>
+  <WebVitalsPanel v-if="showVitalsPanel" />
 </template>
 
 <script setup lang="ts">
@@ -25,8 +17,7 @@ import WebVitalsPanel from '@/components/perf/WebVitalsPanel.vue'
 
 const userStore = useUserStore()
 const showVitalsPanel =
-  import.meta.env.DEV ||
-  (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('vitals') === '1')
+  typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('vitals') === '1'
 
 onMounted(() => {
   // 初始化时检查登录状态
@@ -70,5 +61,12 @@ onMounted(() => {
 @keyframes route-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: none;
+  }
 }
 </style>

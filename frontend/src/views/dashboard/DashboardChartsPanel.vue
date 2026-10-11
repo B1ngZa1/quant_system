@@ -5,9 +5,9 @@
         <span class="chart-card__title">收益趋势</span>
         <span class="chart-card__sub">策略表现（示意）</span>
         <el-radio-group v-model="chartPeriod" size="small" class="chart-card__tabs">
-          <el-radio-button label="7d">7天</el-radio-button>
-          <el-radio-button label="30d">30天</el-radio-button>
-          <el-radio-button label="90d">90天</el-radio-button>
+          <el-radio-button value="7d">7天</el-radio-button>
+          <el-radio-button value="30d">30天</el-radio-button>
+          <el-radio-button value="90d">90天</el-radio-button>
         </el-radio-group>
       </div>
       <div ref="trendChartRef" class="chart-box"></div>
@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { echarts, CHART_COLORS } from '@/utils/echarts'
+import { CHART_COLORS } from '@/utils/echarts'
 import { useChart } from '@/composables/useChart'
 
 const trendChartRef = ref<HTMLElement>()
@@ -59,12 +59,12 @@ const trendOption = () => ({
     data: ['01', '05', '10', '15', '20', '25', '30'],
     axisLine: { show: false },
     axisTick: { show: false },
-    axisLabel: { fontSize: 10, color: '#94a3b8' }
+    axisLabel: { fontSize: 10, color: '#9aaac0' }
   },
   yAxis: {
     type: 'value',
-    splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)', type: 'dashed' } },
-    axisLabel: { fontSize: 10, color: '#94a3b8' }
+    splitLine: { lineStyle: { color: 'rgba(180,193,208,0.12)', type: 'dashed' } },
+    axisLabel: { fontSize: 10, color: '#9aaac0' }
   },
   tooltip: { trigger: 'axis' },
   series: [{
@@ -89,7 +89,7 @@ const pieOption = () => ({
     type: 'pie',
     radius: ['42%', '68%'],
     avoidLabelOverlap: false,
-    itemStyle: { borderRadius: 4, borderColor: 'rgba(255,255,255,0.18)', borderWidth: 1 },
+    itemStyle: { borderRadius: 2, borderColor: 'rgba(180,193,208,0.2)', borderWidth: 1 },
     label: { fontSize: 11 },
     data: [
       { value: 35, name: '股票', itemStyle: { color: CHART_COLORS.primary } },
@@ -108,12 +108,12 @@ const volumeOption = () => ({
     data: ['周一', '周二', '周三', '周四', '周五'],
     axisLine: { show: false },
     axisTick: { show: false },
-    axisLabel: { fontSize: 10, color: '#94a3b8' }
+    axisLabel: { fontSize: 10, color: '#9aaac0' }
   },
   yAxis: {
     type: 'value',
-    splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)', type: 'dashed' } },
-    axisLabel: { fontSize: 10, color: '#94a3b8' }
+    splitLine: { lineStyle: { color: 'rgba(180,193,208,0.12)', type: 'dashed' } },
+    axisLabel: { fontSize: 10, color: '#9aaac0' }
   },
   tooltip: { trigger: 'axis' },
   series: [{
@@ -130,12 +130,12 @@ const distributionOption = () => ({
     data: ['<0%', '0-2%', '2-5%', '5-10%', '>10%'],
     axisLine: { show: false },
     axisTick: { show: false },
-    axisLabel: { fontSize: 10, color: '#94a3b8' }
+    axisLabel: { fontSize: 10, color: '#9aaac0' }
   },
   yAxis: {
     type: 'value',
-    splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)', type: 'dashed' } },
-    axisLabel: { fontSize: 10, color: '#94a3b8' }
+    splitLine: { lineStyle: { color: 'rgba(180,193,208,0.12)', type: 'dashed' } },
+    axisLabel: { fontSize: 10, color: '#9aaac0' }
   },
   tooltip: { trigger: 'axis' },
   series: [{
@@ -146,9 +146,9 @@ const distributionOption = () => ({
 })
 
 const { chart: trendChart } = useChart(trendChartRef, trendOption)
-const { chart: pieChart } = useChart(pieChartRef, pieOption)
-const { chart: volumeChart } = useChart(volumeChartRef, volumeOption)
-const { chart: distributionChart } = useChart(distributionChartRef, distributionOption)
+useChart(pieChartRef, pieOption)
+useChart(volumeChartRef, volumeOption)
+useChart(distributionChartRef, distributionOption)
 
 watch(chartPeriod, () => {
   trendChart.value?.setOption({ series: [{ data: chartSeriesMap[chartPeriod.value] }] })
@@ -158,16 +158,28 @@ watch(chartPeriod, () => {
 <style scoped lang="scss">
 .charts-row {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .chart-card {
-  background: linear-gradient(180deg, rgba(31, 23, 29, 0.96), rgba(21, 16, 20, 0.9));
-  border-radius: 12px;
-  padding: 12px 14px;
+  grid-column: span 4;
+  background: var(--bg-panel);
+  border-radius: 0;
+  padding: 14px;
   border: 1px solid var(--line-soft);
-  box-shadow: var(--shadow-base);
+  box-shadow: none;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+
+  &:hover {
+    border-color: var(--line-strong);
+    background: var(--surface-hover);
+  }
+}
+
+.chart-card--wide {
+  grid-column: span 12;
+  padding: 16px;
 }
 
 .chart-card__head {
@@ -175,12 +187,13 @@ watch(chartPeriod, () => {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  min-height: 24px;
+  margin-bottom: 12px;
 }
 
 .chart-card__title {
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -195,16 +208,44 @@ watch(chartPeriod, () => {
 }
 
 .chart-box {
-  height: 168px;
+  height: 166px;
+}
+
+.chart-card--wide .chart-box {
+  height: 260px;
 }
 
 .chart-box--pie {
-  height: 176px;
+  height: 166px;
 }
 
 @media (max-width: 1100px) {
   .charts-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chart-card,
+  .chart-card--wide {
+    grid-column: span 1;
+  }
+
+  .chart-card--wide {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .charts-row {
     grid-template-columns: 1fr;
+  }
+
+  .chart-card,
+  .chart-card--wide {
+    grid-column: span 1;
+  }
+
+  .chart-card--wide .chart-box {
+    height: 210px;
   }
 }
 </style>

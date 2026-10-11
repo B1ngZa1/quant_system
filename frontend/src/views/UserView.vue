@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
@@ -59,7 +59,7 @@ import SectionHeader from '@/components/ui/SectionHeader.vue'
 import { formatDate } from '@/utils/format'
 
 const userStore = useUserStore()
-const userInfo = ref(userStore.userInfo)
+const userInfo = computed(() => userStore.userInfo)
 const activeTab = ref('profile')
 const updating = ref(false)
 const changingPassword = ref(false)
@@ -85,7 +85,7 @@ const passwordRules: FormRules = {
   confirm_password: [
     { required: true, message: '请确认新密码', trigger: 'blur' },
     {
-      validator: (_rule: any, value: string, callback: Function) => {
+      validator: (_rule: any, value: string, callback: (error?: Error) => void) => {
         if (value !== passwordForm.value.new_password) {
           callback(new Error('两次输入的密码不一致'))
         } else {
@@ -102,7 +102,6 @@ async function handleUpdateProfile() {
   try {
     await updateUserInfo(profileForm.value)
     await userStore.fetchUserInfo()
-    userInfo.value = userStore.userInfo
     ElMessage.success('个人信息已更新')
   } catch (e: any) {
     ElMessage.error(e?.message || '更新失败')
@@ -133,7 +132,6 @@ onMounted(async () => {
   if (!userStore.userInfo) {
     await userStore.fetchUserInfo()
   }
-  userInfo.value = userStore.userInfo
   profileForm.value.full_name = userInfo.value?.full_name || ''
   profileForm.value.phone = userInfo.value?.phone || ''
 })

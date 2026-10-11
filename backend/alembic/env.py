@@ -1,4 +1,4 @@
-"""Alembic 环境配置"""
+"""Alembic 环境配置 — PostgreSQL 专用"""
 import os
 import sys
 from logging.config import fileConfig
@@ -18,20 +18,8 @@ from app.models import *  # 导入所有模型
 # this is the Alembic Config object
 config = context.config
 
-def get_url():
-    """获取数据库 URL"""
-    db_type = getattr(settings, "DATABASE_TYPE", "").strip().lower()
-    if db_type == "sqlite":
-        return settings.sync_sqlite_url
-    elif db_type == "postgres":
-        return settings.sync_postgres_url
-    else:
-        return settings.sync_mysql_url
-
-# 设置数据库URL：优先环境变量，其次根据 DATABASE_TYPE 选择
-database_url = os.getenv("DATABASE_URL")
-if not database_url:
-    database_url = get_url()
+# 设置数据库URL：优先环境变量，其次使用 PostgreSQL
+database_url = os.getenv("DATABASE_URL") or settings.sync_postgres_url
 config.set_main_option("sqlalchemy.url", database_url)
 
 # 解释配置文件中的Python日志配置

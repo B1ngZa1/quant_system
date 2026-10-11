@@ -101,6 +101,12 @@ async def lifespan(app: FastAPI):
         log.error(f"关闭AI HTTP连接池失败: {e}")
 
     try:
+        from app.db.duckdb_service import close_duckdb
+        close_duckdb()
+    except Exception as e:
+        log.error(f"关闭 DuckDB 连接失败: {e}")
+
+    try:
         await close_db()
     except Exception as e:
         log.error(f"关闭数据库连接失败: {e}")
@@ -156,6 +162,7 @@ def create_application() -> FastAPI:
         return response
 
     # 有界 LRU 限流桶（最多保留 2000 个 IP 桶，避免内存泄漏）
+    # 注意：内存限流器仅适用于单 worker 部署；多 worker 场景需使用 Redis 限流。
     _RATE_BUCKET_MAX = 2000
     rate_buckets: OrderedDict[str, list[float]] = OrderedDict()
 
@@ -209,6 +216,8 @@ def create_application() -> FastAPI:
             return ErrorCode.NOT_FOUND
         if status_code == 422:
             return ErrorCode.VALIDATION_ERROR
+        if status_code == 503:
+            return ErrorCode.SERVICE_UNAVAILABLE
         return ErrorCode.SERVER_ERROR
 
     @app.exception_handler(BusinessException)
@@ -220,13 +229,19 @@ def create_application() -> FastAPI:
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
-        message = str(exc.detail) if exc.detail else "请求失败"
+        detail = exc.detail
+        if isinstance(detail, dict):
+            message = str(detail.get("message") or "请求失败")
+            data = detail
+        else:
+            message = str(detail) if detail else "请求失败"
+            data = None
         return JSONResponse(
             status_code=exc.status_code,
             content={
                 "code": _fallback_error_code(exc.status_code),
                 "message": message,
-                "data": None,
+                "data": data,
             },
         )
 
@@ -291,5 +306,28 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """健康检查"""
-    return {"status": "healthy", "timestamp": time.time(), "version": settings.APP_VERSION}
+    """健康检查（含数据库连通性）"""
+    from app.db.session import check_db_health
+    from app.db.duckdb_service import duckdb_service
+
+    pg = await check_db_health()
+    duck = duckdb_service.health_check()
+
+    redis_ok = False
+    try:
+        if redis_cache._redis:
+            await redis_cache._redis.ping()
+            redis_ok = True
+    except Exception:
+        pass
+
+    overall = "healthy" if pg["status"] == "healthy" else "degraded"
+
+    return {
+        "status": overall,
+        "timestamp": time.time(),
+        "version": settings.APP_VERSION,
+        "postgres": pg,
+        "duckdb": duck,
+        "redis": redis_ok,
+    }

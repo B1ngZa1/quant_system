@@ -10,23 +10,28 @@
     <div v-if="sentimentStrip" class="sentiment-strip">
       <span class="sentiment-strip__label">市场情绪</span>
       <el-tag size="small" effect="plain" type="warning">{{ sentimentStrip.label }}</el-tag>
-      <span class="sentiment-strip__num">热度 {{ sentimentStrip.momentum }}</span>
+      <span class="sentiment-strip__num">热度 {{ sentimentStrip.momentum ?? '—' }}</span>
       <span class="sentiment-strip__sep">|</span>
-      <span class="sentiment-strip__ad">涨 {{ sentimentStrip.advancers }}</span>
+      <span class="sentiment-strip__ad">涨 {{ sentimentStrip.advancers ?? '—' }}</span>
       <span class="sentiment-strip__sep">/</span>
-      <span class="sentiment-strip__dc">跌 {{ sentimentStrip.decliners }}</span>
+      <span class="sentiment-strip__dc">跌 {{ sentimentStrip.decliners ?? '—' }}</span>
       <span v-if="sentimentStrip.date" class="sentiment-strip__date">{{ sentimentStrip.date }}</span>
     </div>
 
-    <DashboardIndicesGrid :loading="overviewLoading" :items="marketIndices" />
+    <DashboardIndicesGrid :status="overviewStatus" :items="marketIndices" />
 
-    <div class="dash-body">
+    <div class="dash-body" :class="{ 'dash-body--single': newsStatus !== 'ready' && newsStatus !== 'loading' }">
       <div class="dash-body__main">
-        <DashboardChartsPanel />
-        <DashboardActivityPanel />
+        <DashboardResearchPanel :status="backtestsStatus" :items="backtests" @refresh="refreshData" />
+        <DashboardRecentRuns :status="backtestsStatus" :items="backtests" />
+        <div v-if="newsStatus === 'empty' || newsStatus === 'error'" class="news-status" role="status">
+          <span class="news-status__label">资讯状态</span>
+          <span>{{ newsStatus === 'error' ? '资讯暂时无法读取，可稍后刷新。' : '暂时没有可展示的资讯。' }}</span>
+          <router-link to="/market">前往行情中心 <span aria-hidden="true">↗</span></router-link>
+        </div>
       </div>
 
-      <DashboardNewsPanel :loading="newsLoading" :title="newsSectionTitle" :items="displayNews" />
+      <DashboardNewsPanel v-if="newsStatus === 'ready' || newsStatus === 'loading'" :loading="newsLoading" :title="newsSectionTitle" :items="displayNews" />
     </div>
   </div>
 </template>
@@ -36,14 +41,14 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useUserStore } from '@/store/modules/user'
 import DashboardPageHeader from './DashboardPageHeader.vue'
 import DashboardIndicesGrid from './DashboardIndicesGrid.vue'
-import DashboardChartsPanel from './DashboardChartsPanel.vue'
-import DashboardActivityPanel from './DashboardActivityPanel.vue'
+import DashboardResearchPanel from './DashboardResearchPanel.vue'
+import DashboardRecentRuns from './DashboardRecentRuns.vue'
 import DashboardNewsPanel from './DashboardNewsPanel.vue'
 import { useDashboardData } from './useDashboardData'
 import { formatCnDashboardDate, getCnAshareSessionLabel } from '@/utils/aShareSession'
 
 const userStore = useUserStore()
-const userName = computed(() => userStore.userInfo?.username || '用户')
+const userName = computed(() => userStore.token ? (userStore.userInfo?.username || '研究成员') : '访客')
 
 const sessionTick = ref(0)
 const trackSessionTick = (): void => {
@@ -61,7 +66,7 @@ const marketStatus = computed(() => {
   return getCnAshareSessionLabel()
 })
 
-const { overviewLoading, newsLoading, marketIndices, sentimentStrip, displayNews, newsSectionTitle, refreshData } =
+const { newsLoading, overviewStatus, newsStatus, backtestsStatus, marketIndices, backtests, sentimentStrip, displayNews, newsSectionTitle, refreshData } =
   useDashboardData()
 
 let sessionTimer: number | undefined
@@ -80,10 +85,10 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .dashboard {
-  padding: 16px 18px 24px;
+  padding: 20px 24px 28px;
   background: var(--bg-cream);
   min-height: 100vh;
-  max-width: 1600px;
+  max-width: 1680px;
   margin: 0 auto;
 }
 
@@ -91,18 +96,19 @@ onUnmounted(() => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  padding: 8px 12px;
-  margin-bottom: 12px;
+  gap: 8px 14px;
+  min-height: 38px;
+  padding: 8px 14px;
+  margin-bottom: 16px;
   font-size: 12px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(30, 64, 175, 0.2));
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  box-shadow: var(--shadow-primary);
+  background: var(--bg-panel);
+  border: 1px solid var(--line-soft);
+  border-radius: 0;
+  box-shadow: none;
 
   &__label {
     font-weight: 600;
-    color: #ffe8e4;
+    color: var(--text-primary);
     margin-right: 4px;
   }
 
@@ -112,17 +118,17 @@ onUnmounted(() => {
   }
 
   &__sep {
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--line-strong);
     margin: 0 2px;
   }
 
   &__ad {
-    color: #dc2626;
+    color: var(--up-color);
     font-variant-numeric: tabular-nums;
   }
 
   &__dc {
-    color: #16a34a;
+    color: var(--down-color);
     font-variant-numeric: tabular-nums;
   }
 
@@ -136,15 +142,36 @@ onUnmounted(() => {
 .dash-body {
   display: grid;
   grid-template-columns: 1fr minmax(260px, 340px);
-  gap: 12px;
+  gap: 16px;
   align-items: start;
 
   &__main {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
   }
+
+  &--single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.news-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  padding: 14px 18px;
+  border: 1px solid var(--line-soft);
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  font-size: 12px;
+
+  &__label { color: var(--text-primary); font-weight: 600; }
+
+  a { margin-left: auto; color: var(--primary-600); text-decoration: none; }
+  a:focus-visible { outline: 2px solid var(--primary-500); outline-offset: 3px; }
 }
 
 @media (max-width: 1100px) {

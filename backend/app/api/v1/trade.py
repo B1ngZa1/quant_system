@@ -27,6 +27,7 @@ from app.schemas.trade import (
     PortfolioListParams,
 )
 from app.schemas.base import DataResponse, ListResponse, SuccessResponse
+from app.utils.crud import get_owned_item, paginate_query
 
 router = APIRouter()
 
@@ -58,30 +59,19 @@ async def list_portfolios(
     """获取投资组合列表"""
     query = select(Portfolio).where(Portfolio.user_id == current_user.id)
     count_query = select(func.count(Portfolio.id)).where(Portfolio.user_id == current_user.id)
-    
+
     if params.is_simulated is not None:
         query = query.where(Portfolio.is_simulated == params.is_simulated)
         count_query = count_query.where(Portfolio.is_simulated == params.is_simulated)
-    
+
     if params.is_active is not None:
         query = query.where(Portfolio.is_active == params.is_active)
         count_query = count_query.where(Portfolio.is_active == params.is_active)
-    
+
     query = query.order_by(desc(Portfolio.is_default), desc(Portfolio.created_at))
-    
-    count_result = await db.execute(count_query)
-    total = count_result.scalar()
-    
-    query = query.offset(params.offset).limit(params.page_size)
-    result = await db.execute(query)
-    portfolios = result.scalars().all()
-    
-    return ListResponse(
-        data=[PortfolioResponse.model_validate(p) for p in portfolios],
-        total=total,
-        page=params.page,
-        page_size=params.page_size
-    )
+
+    result = await paginate_query(db, query, count_query, params.page, params.page_size, PortfolioResponse)
+    return ListResponse(**result)
 
 
 @router.post("/portfolio/create", response_model=DataResponse[PortfolioResponse])
@@ -107,20 +97,7 @@ async def get_portfolio(
     db: AsyncSession = Depends(get_db)
 ) -> Any:
     """获取组合详情（含持仓）"""
-    result = await db.execute(
-        select(Portfolio).where(
-            Portfolio.id == portfolio_id,
-            Portfolio.user_id == current_user.id
-        )
-    )
-    portfolio = result.scalar_one_or_none()
-    
-    if not portfolio:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="组合不存在"
-        )
-    
+    portfolio = await get_owned_item(db, Portfolio, portfolio_id, current_user.id, "组合不存在")
     return DataResponse(data=PortfolioResponse.model_validate(portfolio))
 
 
@@ -132,18 +109,7 @@ async def update_portfolio(
     db: AsyncSession = Depends(get_db),
 ) -> Any:
     """更新投资组合（名称、描述、是否启用）"""
-    result = await db.execute(
-        select(Portfolio).where(
-            Portfolio.id == portfolio_id,
-            Portfolio.user_id == current_user.id,
-        )
-    )
-    portfolio = result.scalar_one_or_none()
-    if not portfolio:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="组合不存在",
-        )
+    portfolio = await get_owned_item(db, Portfolio, portfolio_id, current_user.id, "组合不存在")
 
     portfolio = await trade_application_service.update_portfolio(
         db,
@@ -163,18 +129,7 @@ async def get_portfolio_performance(
     db: AsyncSession = Depends(get_db),
 ) -> Any:
     """获取组合每日绩效快照"""
-    portfolio_result = await db.execute(
-        select(Portfolio).where(
-            Portfolio.id == portfolio_id,
-            Portfolio.user_id == current_user.id
-        )
-    )
-    portfolio = portfolio_result.scalar_one_or_none()
-    if not portfolio:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="组合不存在"
-        )
+    await get_owned_item(db, Portfolio, portfolio_id, current_user.id, "组合不存在")
 
     result = await db.execute(
         select(PortfolioPerformance)
@@ -219,46 +174,35 @@ async def list_trades(
     """获取交易列表"""
     query = select(Trade).where(Trade.user_id == current_user.id)
     count_query = select(func.count(Trade.id)).where(Trade.user_id == current_user.id)
-    
+
     if params.symbol:
         query = query.where(Trade.symbol == params.symbol.upper())
         count_query = count_query.where(Trade.symbol == params.symbol.upper())
-    
+
     if params.trade_type:
         query = query.where(Trade.trade_type == params.trade_type)
         count_query = count_query.where(Trade.trade_type == params.trade_type)
-    
+
     if params.status:
         query = query.where(Trade.status == params.status)
         count_query = count_query.where(Trade.status == params.status)
-    
+
     if params.is_simulated is not None:
         query = query.where(Trade.is_simulated == params.is_simulated)
         count_query = count_query.where(Trade.is_simulated == params.is_simulated)
-    
+
     if params.start_date:
         query = query.where(Trade.created_at >= params.start_date)
         count_query = count_query.where(Trade.created_at >= params.start_date)
-    
+
     if params.end_date:
         query = query.where(Trade.created_at <= params.end_date)
         count_query = count_query.where(Trade.created_at <= params.end_date)
-    
+
     query = query.order_by(desc(Trade.created_at))
-    
-    count_result = await db.execute(count_query)
-    total = count_result.scalar()
-    
-    query = query.offset(params.offset).limit(params.page_size)
-    result = await db.execute(query)
-    trades = result.scalars().all()
-    
-    return ListResponse(
-        data=[TradeResponse.model_validate(t) for t in trades],
-        total=total,
-        page=params.page,
-        page_size=params.page_size
-    )
+
+    result = await paginate_query(db, query, count_query, params.page, params.page_size, TradeResponse)
+    return ListResponse(**result)
 
 
 @router.delete("/{trade_id}", response_model=SuccessResponse)

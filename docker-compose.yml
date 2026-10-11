@@ -1,17 +1,18 @@
 services:
   postgres:
-    image: ${POSTGRES_IMAGE:-postgres:14}
+    image: ${POSTGRES_IMAGE:-timescale/timescaledb:latest-pg16}
     container_name: quant-postgres
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     env_file:
       - ./backend/.env.docker
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-quant_user}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change_me}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the shell or root .env}
       - POSTGRES_DB=${POSTGRES_DB:-quant_db}
     volumes:
       - pg_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U quant_user -d quant_db"]
       interval: 10s
@@ -27,21 +28,24 @@ services:
       dockerfile: Dockerfile
     container_name: quant-backend
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     env_file:
       - ./backend/.env.docker
     environment:
       - DEBUG=${DEBUG:-false}
       - ENVIRONMENT=${ENVIRONMENT:-docker}
-      - DATABASE_TYPE=${DATABASE_TYPE:-postgres}
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=${POSTGRES_PORT:-5432}
       - POSTGRES_USER=${POSTGRES_USER:-quant_user}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change_me}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the shell or root .env}
       - POSTGRES_DB=${POSTGRES_DB:-quant_db}
+      - DUCKDB_PATH=/app/data/quant_analytics.duckdb
+      - DUCKDB_MEMORY_LIMIT=${DUCKDB_MEMORY_LIMIT:-4GB}
+      - DUCKDB_THREADS=${DUCKDB_THREADS:-4}
       - REDIS_HOST=redis
       - REDIS_PORT=${REDIS_PORT:-6379}
       - REDIS_DB=${REDIS_DB:-0}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-quant_redis_pass}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - SECRET_KEY=${SECRET_KEY:-replace_with_secure_secret}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost,http://127.0.0.1}
@@ -69,7 +73,7 @@ services:
       dockerfile: Dockerfile
     container_name: quant-frontend
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
     depends_on:
       backend:
         condition: service_healthy
@@ -87,12 +91,12 @@ services:
     image: redis:alpine
     container_name: quant-redis
     ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes
+      - "127.0.0.1:6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-quant_redis_pass}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-quant_redis_pass}", "ping"]
       interval: 10s
       timeout: 3s
       retries: 3

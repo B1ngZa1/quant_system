@@ -1,4 +1,5 @@
 """标准化系统设置接口。"""
+import json
 from typing import Any
 
 from fastapi import APIRouter, Depends
@@ -17,16 +18,34 @@ class SettingPayload(BaseModel):
     value: Any
 
 
+def _parse_preferences(user: User) -> dict[str, Any]:
+    """Parse user preferences from stored JSON string."""
+    raw = user.preferences
+    if raw is None:
+        return {}
+    if isinstance(raw, dict):
+        return raw
+    try:
+        return json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
+def _save_preferences(user: User, prefs: dict[str, Any]) -> None:
+    """Serialize preferences dict to JSON string for storage."""
+    user.preferences = json.dumps(prefs, ensure_ascii=False)
+
+
 @router.get("/list", response_model=ListResponse[dict])
 async def list_items(current_user: User = Depends(get_current_user)) -> Any:
-    preferences = current_user.preferences or {}
+    preferences = _parse_preferences(current_user)
     items = [{"key": key, "value": value} for key, value in preferences.items()]
     return ListResponse(data=items, total=len(items), page=1, page_size=max(1, len(items)))
 
 
 @router.get("/detail/{key}", response_model=DataResponse[dict])
 async def detail_item(key: str, current_user: User = Depends(get_current_user)) -> Any:
-    preferences = current_user.preferences or {}
+    preferences = _parse_preferences(current_user)
     return DataResponse(data={"key": key, "value": preferences.get(key)})
 
 
@@ -36,9 +55,9 @@ async def create_item(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    preferences = current_user.preferences or {}
+    preferences = _parse_preferences(current_user)
     preferences[payload.key] = payload.value
-    current_user.preferences = preferences
+    _save_preferences(current_user, preferences)
     await db.commit()
     return DataResponse(data={"key": payload.key, "value": payload.value})
 
@@ -58,9 +77,9 @@ async def update_item(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    preferences = current_user.preferences or {}
+    preferences = _parse_preferences(current_user)
     preferences[key] = payload.value
-    current_user.preferences = preferences
+    _save_preferences(current_user, preferences)
     await db.commit()
     return DataResponse(data={"key": key, "value": payload.value})
 
@@ -71,8 +90,8 @@ async def remove_item(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
-    preferences = current_user.preferences or {}
+    preferences = _parse_preferences(current_user)
     preferences.pop(key, None)
-    current_user.preferences = preferences
+    _save_preferences(current_user, preferences)
     await db.commit()
     return SuccessResponse(message=f"设置项 {key} 已删除")

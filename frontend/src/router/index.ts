@@ -9,10 +9,11 @@ NProgress.configure({ showSpinner: false })
 const loadMainLayout = () => import('@/layouts/MainLayout.vue')
 const loadDashboardView = () => import('@/views/dashboard/index.vue')
 const loadMarketView = () => import('@/views/market/index.vue')
-const loadMarketDetailView = () => import('@/views/MarketDetailView.vue')
+const loadMarketDetailView = () => import('@/views/market/detail.vue')
 const loadBacktestView = () => import('@/views/BacktestView.vue')
 const loadTradingView = () => import('@/views/TradingView.vue')
 const loadEventView = () => import('@/views/EventView.vue')
+const loadAssetLibraryView = () => import('@/views/design/AssetLibraryView.vue')
 
 type AsyncLoader = () => Promise<unknown>
 const prefetchedLoaders = new WeakSet<AsyncLoader>()
@@ -75,6 +76,12 @@ export const routes = [
             meta: { title: '策略列表' }
           },
           {
+            path: '/strategy/discover',
+            name: 'StrategyDiscover',
+            component: () => import('@/views/strategy/discover.vue'),
+            meta: { title: '策略发现' }
+          },
+          {
             path: '/strategy/create',
             name: 'StrategyCreate',
             component: () => import('@/views/strategy/edit.vue'),
@@ -91,14 +98,54 @@ export const routes = [
       {
         path: '/backtest',
         name: 'Backtest',
-        component: loadBacktestView,
-        meta: { title: '回测系统', icon: 'Histogram' }
+        redirect: '/backtest/list',
+        meta: { title: '回测系统', icon: 'Histogram' },
+        children: [
+          {
+            path: '/backtest/list',
+            name: 'BacktestList',
+            component: loadBacktestView,
+            meta: { title: '回测列表' }
+          },
+          {
+            path: '/backtest/create',
+            name: 'BacktestCreate',
+            component: () => import('@/views/backtest/create.vue'),
+            meta: { title: '新建回测' }
+          },
+          {
+            path: '/backtest/result/:id',
+            name: 'BacktestResult',
+            component: () => import('@/views/backtest/result.vue'),
+            meta: { title: '回测结果', hidden: true }
+          }
+        ]
       },
       {
         path: '/trading',
         name: 'Trading',
-        component: loadTradingView,
-        meta: { title: '交易中心', icon: 'Money' }
+        redirect: '/trading/orders',
+        meta: { title: '交易中心', icon: 'Money' },
+        children: [
+          {
+            path: '/trading/orders',
+            name: 'TradingOrders',
+            component: loadTradingView,
+            meta: { title: '交易中心' }
+          },
+          {
+            path: '/trading/portfolio',
+            name: 'TradingPortfolio',
+            component: () => import('@/views/trade/portfolio.vue'),
+            meta: { title: '投资组合' }
+          },
+          {
+            path: '/trading/history',
+            name: 'TradingHistory',
+            component: () => import('@/views/trade/history.vue'),
+            meta: { title: '交易记录' }
+          }
+        ]
       },
       {
         path: '/data',
@@ -155,8 +202,26 @@ export const routes = [
         name: 'User',
         component: () => import('@/views/UserView.vue'),
         meta: { title: '个人中心', icon: 'Avatar' }
+      },
+      {
+        path: '/design-system',
+        name: 'DesignSystem',
+        component: loadAssetLibraryView,
+        meta: { title: '前端素材库', icon: 'Grid' }
       }
     ]
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/login/index.vue'),
+    meta: { public: true, title: '登录' }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/login/register.vue'),
+    meta: { public: true, title: '注册' }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -185,12 +250,9 @@ router.beforeEach(async (to, _from, next) => {
   next()
 })
 
-router.afterEach(() => {
-  NProgress.done()
-  prefetchRouteLoaders([loadMarketDetailView])
-})
-
 router.afterEach((to) => {
+  NProgress.done()
+
   if (to.path === '/dashboard') {
     prefetchRouteLoaders([loadMarketView, loadTradingView, loadBacktestView, loadEventView])
     return
@@ -201,7 +263,10 @@ router.afterEach((to) => {
   }
   if (to.path.startsWith('/backtest') || to.path.startsWith('/trading')) {
     prefetchRouteLoaders([loadDashboardView, loadMarketView, loadMarketDetailView])
+    return
   }
+  // 默认预加载市场详情
+  prefetchRouteLoaders([loadMarketDetailView])
 })
 
 export default router

@@ -49,15 +49,15 @@ provide('errorBoundaryRetryCount', retryCount)
   align-items: center;
   justify-content: center;
   padding: 32px 24px;
-  background: rgba(239, 68, 68, 0.06);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
   border-radius: var(--radius-lg);
   text-align: center;
 
   &__icon {
     width: 40px;
     height: 40px;
-    color: #ef4444;
+    color: var(--danger-500);
     margin-bottom: 12px;
   }
 

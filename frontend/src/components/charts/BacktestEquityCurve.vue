@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { echarts, CHART_COLORS } from '@/utils/echarts'
+import { CHART_COLORS } from '@/utils/echarts'
 import { useChart } from '@/composables/useChart'
 
 interface EquityPoint {
@@ -68,7 +68,7 @@ function buildOption() {
       data: props.data.map(d => d.benchmark ?? null),
       smooth: true,
       symbol: 'none',
-      lineStyle: { color: '#94a3b8', width: 1.5, type: 'dashed' },
+      lineStyle: { color: CHART_COLORS.neutral, width: 1.5, type: 'dashed' },
       xAxisIndex: 0,
       yAxisIndex: 0,
     })
@@ -81,7 +81,7 @@ function buildOption() {
     smooth: true,
     symbol: 'none',
     lineStyle: { color: CHART_COLORS.down, width: 1 },
-    areaStyle: { color: 'rgba(16,185,129,0.12)' },
+    areaStyle: { color: CHART_COLORS.downWash },
     xAxisIndex: 1,
     yAxisIndex: 1,
   })

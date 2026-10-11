@@ -1,0 +1,89 @@
+{
+  "blockers": [
+    {
+      "code": "MANIFEST_REQUIRED",
+      "message": "No dataset manifest was supplied; no local data was selected."
+    }
+  ],
+  "data_gaps": [
+    {
+      "dataset": "daily_data/不复权/**/*.parquet",
+      "evidence_path": "research/datasets/DATA_CATALOG.csv; research/datasets/README.md",
+      "reason": "source, license, adjustment rules, and row-level available_at are unverified",
+      "status": "excluded"
+    },
+    {
+      "dataset": "research/datasets/raw/treasury_daily_par_yield_curve_2025_source.csv",
+      "evidence_path": "research/datasets/DATA_CATALOG.csv; research/datasets/source_registry.csv",
+      "reason": "yield estimates are not execution prices and have no row-level point-in-time availability evidence",
+      "status": "excluded"
+    },
+    {
+      "dataset": "research/datasets/venue_rule_snapshots/",
+      "evidence_path": "research/datasets/DATA_CATALOG.csv; research/datasets/venue_rule_snapshots/README.md",
+      "reason": "Binance snapshots contain dated venue-rule metadata, not historical prices, trades, depth, or fills",
+      "status": "excluded"
+    }
+  ],
+  "declared_source_manifest": null,
+  "execution_costs": {
+    "fields": [
+      "total_fees",
+      "total_slippage",
+      "implementation_shortfall"
+    ],
+    "reason": "no eligible dataset and benchmark configuration were loaded",
+    "status": "not_run"
+  },
+  "leakage_audit": {
+    "required_rule": "available_at must be no later than the decision/fill timestamp",
+    "status": "not_run"
+  },
+  "partial_fills_and_capacity": {
+    "fields": [
+      "filled_quantity",
+      "unfilled_quantity",
+      "fill_rate",
+      "partial_fill_count",
+      "volume_participation",
+      "depth_capacity_utilization"
+    ],
+    "reason": "no eligible dataset and benchmark configuration were loaded",
+    "status": "not_run"
+  },
+  "reproduction": {
+    "code_sha256": {
+      "benchmark_runner": "e03f48214bc4ad9c633640b5aa53d0d0ae8ef02671146b7aa33fe525f88b6a99",
+      "execution_baseline": "b15acb4aa33e1351e5014a2a5b265a320a2f5c7bf55829983833e3bb19707110",
+      "historical_simulator": "f653aae67e2c9fbb38efefcdf99fda47472b4005777021b136beb0ccb44c4ed8"
+    },
+    "command": "python research/models/run_m1_execution_benchmark.py --manifest <manifest-path>",
+    "live_trading_enabled": false,
+    "manifest_path": null,
+    "manifest_sha256": null,
+    "platform": "Windows-11-10.0.26100-SP0",
+    "python": "3.14.2",
+    "random_seed": null,
+    "research_only": true,
+    "stochasticity": "none; deterministic simulator"
+  },
+  "result": null,
+  "schema_version": "m1-execution-benchmark.v1",
+  "status": "blocked",
+  "walk_forward": {
+    "folds": [],
+    "required_configuration": [
+      "train_size",
+      "validation_size",
+      "test_size",
+      "step_size",
+      "embargo"
+    ],
+    "required_partitions": [
+      "train",
+      "validation",
+      "test"
+    ],
+    "status": "not_run"
+  }
+}

@@ -1,49 +1,49 @@
-// SCSS变量定义 - 现代科技蓝量化研究终端主题
+// SCSS变量定义 - 专业量化研究终端主题
 
 // ============================================
 // 主色调 - 科技蓝 / 靛蓝
 // ============================================
-$primary-color: #2563eb;
-$primary-light: #60a5fa;
-$primary-dark: #1e40af;
+$primary-color: #3a7bfd;
+$primary-light: #7db0ff;
+$primary-dark: #245ac6;
 
 // ============================================
 // 功能色
 // ============================================
-$success-color: #f59e0b;
-$warning-color: #fbbf24;
-$danger-color: #fb7185;
-$info-color: #7dd3fc;
+$success-color: #20aa82;
+$warning-color: #e5b85c;
+$danger-color: #e15d67;
+$info-color: #7bb7e8;
 
 // ============================================
 // 金融专用色 - A 股语境默认红涨绿跌
 // ============================================
-$up-color: #ef4444;
-$up-light: rgba(239, 68, 68, 0.14);
-$down-color: #10b981;
-$down-light: rgba(16, 185, 129, 0.14);
-$neutral-color: #94a3b8;
+$up-color: #e15d67;
+$up-light: rgba(225, 93, 103, 0.14);
+$down-color: #20aa82;
+$down-light: rgba(32, 170, 130, 0.14);
+$neutral-color: #9aaac0;
 
 // ============================================
 // 中性色阶 - 炭黑 / 石墨灰
 // ============================================
-$gray-50: #f8f4f1;
-$gray-100: #ece4df;
-$gray-200: #d9cbc4;
-$gray-300: #c1aea5;
-$gray-400: #9e8b84;
-$gray-500: #7b6a65;
-$gray-600: #5f5250;
-$gray-700: #3e3437;
-$gray-800: #241c22;
-$gray-900: #130f14;
+$gray-50: #f1f5f8;
+$gray-100: #dce4ed;
+$gray-200: #c3cfdb;
+$gray-300: #a8b7c7;
+$gray-400: #8493a0;
+$gray-500: #667583;
+$gray-600: #4e5d6b;
+$gray-700: #334250;
+$gray-800: #1d2b38;
+$gray-900: #0b1117;
 
 // ============================================
 // 背景色
 // ============================================
-$bg-cream: #130f14;
-$bg-warm: #1a1218;
-$bg-elevated: #1f171d;
+$bg-cream: #07111f;
+$bg-warm: #0b1625;
+$bg-elevated: #101d2d;
 
 // ============================================
 // 渐变配色
@@ -62,35 +62,35 @@ $gradient-rose: linear-gradient(135deg, #818cf8 0%, #3b82f6 100%);
 // ============================================
 // 布局尺寸
 // ============================================
-$sidebar-width: 260px;
-$sidebar-collapsed-width: 72px;
-$header-height: 72px;
+$sidebar-width: 232px;
+$sidebar-collapsed-width: 60px;
+$header-height: 48px;
 $footer-height: 48px;
 
 // ============================================
 // 圆角系统
 // ============================================
-$radius-sm: 8px;
-$radius-base: 12px;
-$radius-lg: 16px;
-$radius-xl: 20px;
-$radius-2xl: 28px;
+$radius-sm: 4px;
+$radius-base: 6px;
+$radius-lg: 8px;
+$radius-xl: 8px;
+$radius-2xl: 12px;
 $radius-full: 9999px;
 
 // ============================================
 // 阴影系统
 // ============================================
-$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.18);
-$shadow-base: 0 8px 18px rgba(0, 0, 0, 0.18);
-$shadow-md: 0 12px 30px rgba(0, 0, 0, 0.22);
-$shadow-lg: 0 22px 48px rgba(0, 0, 0, 0.28);
-$shadow-xl: 0 30px 70px rgba(0, 0, 0, 0.36);
-$shadow-2xl: 0 36px 86px rgba(0, 0, 0, 0.42);
+$shadow-sm: none;
+$shadow-base: none;
+$shadow-md: 0 8px 24px rgba(0, 0, 0, 0.16);
+$shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.2);
+$shadow-xl: 0 22px 48px rgba(0, 0, 0, 0.24);
+$shadow-2xl: 0 28px 60px rgba(0, 0, 0, 0.28);
 
 // 彩色阴影
-$shadow-primary: 0 14px 38px rgba(37, 99, 235, 0.28);
-$shadow-success: 0 12px 28px rgba(245, 158, 11, 0.22);
-$shadow-info: 0 12px 28px rgba(125, 211, 252, 0.18);
+$shadow-primary: 0 8px 22px rgba(58, 123, 253, 0.16);
+$shadow-success: 0 8px 22px rgba(32, 170, 130, 0.14);
+$shadow-info: 0 8px 22px rgba(123, 183, 232, 0.14);
 
 // ============================================
 // CSS变量定义
@@ -102,25 +102,25 @@ $shadow-info: 0 12px 28px rgba(125, 211, 252, 0.18);
   --header-height: #{$header-height};
   --footer-height: #{$footer-height};
 
-  // 主色阶 - 科技蓝主题
-  --primary-50: #eff6ff;
-  --primary-100: #dbeafe;
-  --primary-200: #bfdbfe;
-  --primary-300: #93c5fd;
-  --primary-400: #60a5fa;
-  --primary-500: #3b82f6;
-  --primary-600: #2563eb;
-  --primary-700: #1d4ed8;
-  --primary-800: #1e40af;
-  --primary-900: #1e3a8a;
+  // 主色阶 - 精确、克制的工作区蓝
+  --primary-50: #edf4ff;
+  --primary-100: #d8e8ff;
+  --primary-200: #bdd8ff;
+  --primary-300: #92beff;
+  --primary-400: #7db0ff;
+  --primary-500: #3a7bfd;
+  --primary-600: #245fce;
+  --primary-700: #1c4ea9;
+  --primary-800: #183e86;
+  --primary-900: #142f65;
 
   // 功能色
-  --success-500: #f59e0b;
-  --success-600: #d97706;
-  --warning-500: #fbbf24;
-  --warning-600: #f59e0b;
-  --info-500: #7dd3fc;
-  --info-600: #38bdf8;
+  --success-500: #20aa82;
+  --success-600: #168564;
+  --warning-500: #e5b85c;
+  --warning-600: #c89334;
+  --info-500: #7bb7e8;
+  --info-600: #4e92ca;
 
   // 金融专用
   --up-color: #{$up-color};
@@ -128,7 +128,7 @@ $shadow-info: 0 12px 28px rgba(125, 211, 252, 0.18);
   --down-color: #{$down-color};
   --down-bg: #{$down-light};
 
-  // 暖灰阶
+  // 中性色阶
   --gray-50: #{$gray-50};
   --gray-100: #{$gray-100};
   --gray-200: #{$gray-200};
@@ -144,16 +144,17 @@ $shadow-info: 0 12px 28px rgba(125, 211, 252, 0.18);
   --bg-cream: #{$bg-cream};
   --bg-warm: #{$bg-warm};
   --bg-elevated: #{$bg-elevated};
-  --bg-panel: rgba(31, 23, 29, 0.88);
-  --bg-panel-strong: rgba(21, 16, 20, 0.96);
-  --bg-panel-soft: rgba(255, 255, 255, 0.04);
-  --text-primary: #f7efe9;
-  --text-secondary: #d7c6bf;
-  --text-muted: #9e8b84;
-  --line-soft: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(96, 165, 250, 0.18);
-  --accent-gold: #d4a24c;
-  --accent-copper: #b87444;
+  --bg-panel: #0c1928;
+  --bg-panel-strong: #101d2d;
+  --bg-panel-soft: rgba(230, 237, 246, 0.035);
+  --surface-hover: #152536;
+  --text-primary: #e6edf6;
+  --text-secondary: #b4c1d0;
+  --text-muted: #8493a0;
+  --line-soft: rgba(214, 224, 235, 0.12);
+  --line-strong: rgba(125, 176, 255, 0.34);
+  --accent-gold: #e5b85c;
+  --accent-copper: #7bb7e8;
 
   // 阴影CSS变量
   --shadow-sm: #{$shadow-sm};
@@ -166,6 +167,7 @@ $shadow-info: 0 12px 28px rgba(125, 211, 252, 0.18);
   // 圆角
   --radius-sm: #{$radius-sm};
   --radius-base: #{$radius-base};
+  --radius-md: #{$radius-base};
   --radius-lg: #{$radius-lg};
   --radius-xl: #{$radius-xl};
   --radius-2xl: #{$radius-2xl};
@@ -175,23 +177,23 @@ $shadow-info: 0 12px 28px rgba(125, 211, 252, 0.18);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  // 玻璃效果
-  --glass-bg: rgba(31, 23, 29, 0.72);
-  --glass-bg-dark: rgba(19, 15, 20, 0.82);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-dark: rgba(255, 255, 255, 0.08);
-  --glass-blur: blur(16px);
+  // 兼容既有组件的表面变量（不使用玻璃态）
+  --glass-bg: #0c1928;
+  --glass-bg-dark: #0c1928;
+  --glass-border: var(--line-soft);
+  --glass-border-dark: var(--line-soft);
+  --glass-blur: none;
 }
 
 html.dark {
-  --up-color: #ff7b6b;
-  --up-bg: rgba(255, 123, 107, 0.18);
-  --down-color: #4ade80;
-  --down-bg: rgba(74, 222, 128, 0.15);
+  --up-color: #e15d67;
+  --up-bg: rgba(225, 93, 103, 0.14);
+  --down-color: #20aa82;
+  --down-bg: rgba(32, 170, 130, 0.14);
 
-  --bg-cream: #1c1917;
-  --bg-warm: #292524;
-  --bg-elevated: #44403c;
+  --bg-cream: #07111f;
+  --bg-warm: #0b1625;
+  --bg-elevated: #101d2d;
 
   --glass-bg: var(--glass-bg-dark);
   --glass-border: var(--glass-border-dark);

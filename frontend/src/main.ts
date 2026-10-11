@@ -9,6 +9,7 @@ import { useAppStore } from './store/modules/app'
 
 // 全局样式
 import './styles/index.scss'
+import './styles/white-red.scss'
 
 // 性能监控
 import { initPerformanceMonitoring } from './utils/performance'

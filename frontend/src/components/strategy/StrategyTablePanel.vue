@@ -35,12 +35,12 @@
       </el-table-column>
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="$emit('edit', row)">编辑</el-button>
-          <el-button link type="success" @click="$emit('backtest', row)">回测</el-button>
-          <el-button link :type="row.status === 'active' ? 'warning' : 'success'" @click="$emit('toggle', row)">
+          <el-button link type="primary" :disabled="actionsDisabled" @click="$emit('edit', row)">编辑</el-button>
+          <el-button link type="success" :disabled="actionsDisabled" @click="$emit('backtest', row)">回测</el-button>
+          <el-button link :disabled="actionsDisabled" :type="row.status === 'active' ? 'warning' : 'success'" @click="$emit('toggle', row)">
             {{ row.status === 'active' ? '暂停' : '启用' }}
           </el-button>
-          <el-button link type="danger" @click="$emit('delete', row)">删除</el-button>
+          <el-button link type="danger" :disabled="actionsDisabled" @click="$emit('delete', row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -71,6 +71,7 @@ defineEmits<{
 
 defineProps<{
   strategyList: StrategyItem[]
+  actionsDisabled?: boolean
 }>()
 
 const getTypeTagType = (type: string): 'primary' | 'success' | 'warning' | 'danger' | 'info' => {

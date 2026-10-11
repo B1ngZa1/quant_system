@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { echarts, CHART_COLORS } from '@/utils/echarts'
+import { CHART_COLORS } from '@/utils/echarts'
 import { useChart } from '@/composables/useChart'
 import UiCard from '@/components/ui/UiCard.vue'
 
@@ -53,10 +53,10 @@ function buildOption() {
     value: s.change,
     itemStyle: {
       color: s.change >= 0
-        ? interpolateColor(s.change, 0, 5, 'rgba(239,68,68,0.15)', '#ef4444')
-        : interpolateColor(-s.change, 0, 5, 'rgba(16,185,129,0.15)', '#10b981'),
-      borderColor: 'rgba(0,0,0,0.3)',
-      borderWidth: 2,
+        ? interpolateColor(s.change, 0, 5, CHART_COLORS.up)
+        : interpolateColor(-s.change, 0, 5, CHART_COLORS.down),
+      borderColor: CHART_COLORS.grid,
+      borderWidth: 1,
     },
   }))
 
@@ -81,8 +81,8 @@ function buildOption() {
           return `{name|${p.name}}\n{val|${sign}${p.data.value.toFixed(2)}%}`
         },
         rich: {
-          name: { fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 22 },
-          val: { fontSize: 12, color: 'rgba(255,255,255,0.8)', lineHeight: 18 },
+          name: { fontSize: 13, fontWeight: 600, color: CHART_COLORS.text, lineHeight: 22 },
+          val: { fontSize: 12, color: CHART_COLORS.axisLabel, lineHeight: 18 },
         },
       },
       data,
@@ -90,14 +90,14 @@ function buildOption() {
   }
 }
 
-function interpolateColor(value: number, min: number, max: number, from: string, to: string): string {
+function interpolateColor(value: number, min: number, max: number, to: string): string {
   const t = Math.min(Math.max((value - min) / (max - min), 0), 1)
   // Simple opacity interpolation for the 'to' color
   if (to.startsWith('#')) {
     const r = parseInt(to.slice(1, 3), 16)
     const g = parseInt(to.slice(3, 5), 16)
     const b = parseInt(to.slice(5, 7), 16)
-    return `rgba(${r},${g},${b},${(0.15 + t * 0.85).toFixed(2)})`
+    return `rgba(${r},${g},${b},${(0.1 + t * 0.4).toFixed(2)})`
   }
   return to
 }

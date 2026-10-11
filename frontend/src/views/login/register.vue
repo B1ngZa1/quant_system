@@ -16,12 +16,12 @@
               </defs>
             </svg>
           </div>
-          <h1 class="logo-text">Quant Trade</h1>
+          <h1 class="logo-text">Quant System</h1>
         </div>
 
         <div class="slogan">
           <h2 class="slogan-title">开启量化之旅<br>从这里开始</h2>
-          <p class="slogan-desc">注册账户，体验智能交易的魅力</p>
+          <p class="slogan-desc">注册账户，开始策略研究与历史回测</p>
         </div>
 
         <div class="features">
@@ -29,19 +29,19 @@
             <div class="feature-icon">
               <el-icon><CircleCheck /></el-icon>
             </div>
-            <span>免费策略模板</span>
+            <span>策略候选整理</span>
           </div>
           <div class="feature-item">
             <div class="feature-icon">
               <el-icon><DataAnalysis /></el-icon>
             </div>
-            <span>专业数据分析</span>
+            <span>历史回测分析</span>
           </div>
           <div class="feature-item">
             <div class="feature-icon">
               <el-icon><TrendCharts /></el-icon>
             </div>
-            <span>实时行情推送</span>
+            <span>数据来源检查</span>
           </div>
         </div>
       </div>
@@ -177,13 +177,10 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
 import { User, Message, Lock, ArrowRight, CircleCheck, CircleCheckFilled, DataAnalysis, TrendCharts } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 
-const router = useRouter()
 const userStore = useUserStore()
 
 const formRef = ref<FormInstance>()
@@ -198,7 +195,7 @@ const form = reactive({
   agreement: false
 })
 
-const validateConfirmPassword = (rule: any, value: any, callback: any) => {
+const validateConfirmPassword = (_rule: unknown, value: unknown, callback: (error?: Error) => void) => {
   if (value === '') {
     callback(new Error('请再次输入密码'))
   } else if (value !== form.password) {
@@ -208,7 +205,7 @@ const validateConfirmPassword = (rule: any, value: any, callback: any) => {
   }
 }
 
-const validateAgreement = (rule: any, value: boolean, callback: any) => {
+const validateAgreement = (_rule: unknown, value: boolean, callback: (error?: Error) => void) => {
   if (!value) {
     callback(new Error('请同意用户协议'))
   } else {
@@ -278,7 +275,7 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #fff5f5 0%, #fff0f0 50%, #fef2f2 100%);
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--bg-panel) 52%, var(--primary-100) 100%);
   padding: 60px;
 
   .brand-content {
@@ -300,14 +297,14 @@ const handleSubmit = async () => {
       svg {
         width: 100%;
         height: 100%;
-        filter: drop-shadow(0 4px 8px rgba(255, 107, 107, 0.3));
+        filter: drop-shadow(0 4px 8px var(--primary-100));
       }
     }
 
     .logo-text {
       font-size: 26px;
       font-weight: 700;
-      background: linear-gradient(135deg, #ff6b6b, #ee5a6c);
+      background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -319,7 +316,7 @@ const handleSubmit = async () => {
     .slogan-title {
       font-size: 36px;
       font-weight: 700;
-      color: #1f2937;
+      color: var(--text-primary);
       line-height: 1.3;
       margin-bottom: 16px;
       letter-spacing: -0.02em;
@@ -327,7 +324,7 @@ const handleSubmit = async () => {
 
     .slogan-desc {
       font-size: 16px;
-      color: #6b7280;
+      color: var(--text-secondary);
     }
   }
 
@@ -341,13 +338,13 @@ const handleSubmit = async () => {
       align-items: center;
       gap: 12px;
       font-size: 14px;
-      color: #4b5563;
+      color: var(--text-secondary);
 
       .feature-icon {
         width: 36px;
         height: 36px;
         border-radius: 10px;
-        background: white;
+        background: var(--bg-panel);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -355,7 +352,7 @@ const handleSubmit = async () => {
 
         :deep(.el-icon) {
           font-size: 18px;
-          color: #ff6b6b;
+          color: var(--primary-500);
         }
       }
     }
@@ -378,7 +375,7 @@ const handleSubmit = async () => {
     .c1 {
       width: 320px;
       height: 320px;
-      background: #fecaca;
+      background: var(--primary-100);
       top: -80px;
       right: -80px;
     }
@@ -386,7 +383,7 @@ const handleSubmit = async () => {
     .c2 {
       width: 240px;
       height: 240px;
-      background: #fde68a;
+      background: var(--primary-50);
       bottom: 60px;
       left: -40px;
     }
@@ -394,7 +391,7 @@ const handleSubmit = async () => {
     .c3 {
       width: 160px;
       height: 160px;
-      background: #ddd6fe;
+      background: var(--primary-200);
       top: 35%;
       right: 8%;
     }
@@ -408,12 +405,17 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: var(--bg-cream);
   padding: 40px;
 
   .form-container {
     width: 100%;
     max-width: 360px;
+    padding: 32px;
+    border: 1px solid var(--line-soft);
+    border-radius: 8px;
+    background: var(--bg-panel);
+    box-shadow: var(--shadow-base);
   }
 
   .form-header {
@@ -422,13 +424,13 @@ const handleSubmit = async () => {
     .title {
       font-size: 24px;
       font-weight: 700;
-      color: #1f2937;
+      color: var(--text-primary);
       margin-bottom: 6px;
     }
 
     .subtitle {
       font-size: 14px;
-      color: #9ca3af;
+      color: var(--text-muted);
     }
   }
 
@@ -443,14 +445,14 @@ const handleSubmit = async () => {
       .field-label {
         font-size: 13px;
         font-weight: 500;
-        color: #374151;
+        color: var(--text-secondary);
         margin-bottom: 6px;
       }
     }
 
     :deep(.custom-input) {
       .el-input__wrapper {
-        background: #f9fafb;
+        background: var(--bg-panel-soft);
         border: 2px solid transparent;
         border-radius: 12px;
         padding: 10px 14px;
@@ -458,13 +460,13 @@ const handleSubmit = async () => {
         transition: all 0.2s;
 
         &:hover {
-          background: #f3f4f6;
+          background: var(--surface-hover);
         }
 
         &.is-focus {
-          background: white;
-          border-color: #fecaca;
-          box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+          background: var(--bg-panel);
+          border-color: var(--primary-300);
+          box-shadow: 0 0 0 3px var(--primary-100);
         }
       }
 
@@ -475,7 +477,7 @@ const handleSubmit = async () => {
 
       .el-input__icon {
         font-size: 18px;
-        color: #9ca3af;
+        color: var(--text-muted);
       }
     }
 
@@ -485,26 +487,26 @@ const handleSubmit = async () => {
           width: 16px;
           height: 16px;
           border-radius: 4px;
-          border-color: #d1d5db;
-          background: white;
+          border-color: var(--line-strong);
+          background: var(--bg-panel);
 
           &:hover {
-            border-color: #ff6b6b;
+            border-color: var(--primary-500);
           }
         }
 
         &.is-checked .el-checkbox__inner {
-          background: #ff6b6b;
-          border-color: #ff6b6b;
+          background: var(--primary-500);
+          border-color: var(--primary-500);
         }
       }
 
       .checkbox-text {
         font-size: 13px;
-        color: #6b7280;
+        color: var(--text-secondary);
 
         .link {
-          color: #ff6b6b;
+          color: var(--primary-600);
           cursor: pointer;
 
           &:hover {
@@ -520,14 +522,14 @@ const handleSubmit = async () => {
       font-size: 15px;
       font-weight: 600;
       border-radius: 12px;
-      background: linear-gradient(135deg, #ff6b6b, #ee5a6c);
+      background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
       border: none;
-      box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+      box-shadow: var(--shadow-primary);
       transition: all 0.2s;
 
       &:hover {
         transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+        box-shadow: var(--shadow-primary);
       }
 
       &:active {
@@ -551,10 +553,10 @@ const handleSubmit = async () => {
 
     .footer-text {
       font-size: 13px;
-      color: #6b7280;
+      color: var(--text-secondary);
 
       .login-link {
-        color: #ff6b6b;
+        color: var(--primary-600);
         font-weight: 600;
         text-decoration: none;
 
@@ -574,7 +576,7 @@ const handleSubmit = async () => {
       width: 80px;
       height: 80px;
       margin: 0 auto 20px;
-      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      background: var(--success-bg);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -584,22 +586,22 @@ const handleSubmit = async () => {
     .success-title {
       font-size: 22px;
       font-weight: 700;
-      color: #1f2937;
+      color: var(--text-primary);
       margin-bottom: 8px;
     }
 
     .success-desc {
       font-size: 14px;
-      color: #6b7280;
+      color: var(--text-secondary);
       margin-bottom: 28px;
     }
 
     .success-btn {
       padding: 12px 40px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #ff6b6b, #ee5a6c);
+      background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
       border: none;
-      box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+      box-shadow: var(--shadow-primary);
     }
   }
 }
@@ -629,49 +631,49 @@ const handleSubmit = async () => {
 // 深色模式（跟随应用主题系统 html.dark）
 html.dark & {
   .brand-section {
-    background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #1f2937 100%);
+    background: linear-gradient(135deg, var(--bg-warm) 0%, var(--bg-cream) 50%, var(--primary-50) 100%);
 
     .logo-text {
-      background: linear-gradient(135deg, #ff7b6b, #ff6b6b);
+      background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .slogan-title {
-      color: white;
+      color: var(--text-primary);
     }
 
     .feature-item {
-      color: #d1d5db;
+      color: var(--text-secondary);
 
       .feature-icon {
-        background: #374151;
+        background: var(--bg-panel-soft);
       }
     }
   }
 
   .form-section {
-    background: #1f2937;
+    background: var(--bg-cream);
 
     .form-header {
       .title {
-        color: white;
+        color: var(--text-primary);
       }
     }
 
     :deep(.custom-input) {
       .el-input__wrapper {
-        background: #374151;
+        background: var(--bg-panel-soft);
 
         &.is-focus {
-          background: #4b5563;
+          background: var(--bg-panel);
         }
       }
     }
 
     .success-box {
       .success-title {
-        color: white;
+        color: var(--text-primary);
       }
     }
   }

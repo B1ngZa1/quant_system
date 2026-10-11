@@ -1,0 +1,274 @@
+[
+  {
+    "source_id": "PAPER_MOODY_1998",
+    "title": "Performance Functions and Reinforcement Learning for Trading Systems and Portfolios",
+    "authors": ["John Moody", "Lizhong Wu", "Yuansong Liao", "Matthew Saffell"],
+    "year": 1998,
+    "topic": "reinforcement_learning",
+    "method": "recurrent_RL_and_risk_adjusted_reward",
+    "url": "https://doi.org/10.1002/%28SICI%291099-131X%281998090%2917%3A5/6%3C441%3A%3AAID-FOR707%3E3.0.CO%3B2-%23",
+    "source_type": "publisher",
+    "accessed_date": "2026-09-21",
+    "local_pdf": null,
+    "project_use": "reward_function_baseline",
+    "metadata_status": "cataloged_rights_to_verify"
+  },
+  {
+    "source_id": "PAPER_NEVYMVAKA_2006",
+    "title": "Reinforcement Learning for Optimized Trade Execution",
+    "authors": ["Yuriy Nevmyvaka", "Yi Feng", "Michael Kearns"],
+    "year": 2006,
+    "topic": "execution",
+    "method": "limit_order_book_RL",
+    "url": "https://www.cis.upenn.edu/~mkearns/papers/rlexec.pdf",
+    "source_type": "author_version",
+    "accessed_date": "2026-09-21",
+    "local_pdf": {
+      "path": "research/papers/raw/nevmyvaka_2006_reinforcement_learning_optimized_trade_execution.pdf",
+      "pages": 8,
+      "sha256": "3157E2D6ACE0BB95FF8FB7215F1B2BB79E7C27F5434137BAB4FDD2E9507DCAE4"
+    },
+    "project_use": "execution_agent_and_LOB_state",
+    "metadata_status": "local_pdf_verified"
+  },
+  {
+    "source_id": "PAPER_JIANG_2017",
+    "title": "A Deep Reinforcement Learning Framework for the Financial Portfolio Management Problem",
+    "authors": ["Zhengyao Jiang", "Dixing Xu", "Jinjun Liang"],
+    "year": 2017,
+    "topic": "deep_RL",
+    "method": "portfolio_vector_memory",
+    "url": "https://arxiv.org/abs/1706.10059",
+    "pdf_url": "https://arxiv.org/pdf/1706.10059",
+    "source_type": "arxiv",
+    "accessed_date": "2026-09-21",
+    "local_pdf": {
+      "path": "research/papers/raw/jiang_2017_deep_rl_financial_portfolio_management.pdf",
+      "pages": 31,
+      "sha256": "77BB80866C02B865137AA09ED7A1B31C981E55AA459BBCFA8A3A1F4B91FAC811"
+    },
+    "project_use": "continuous_weight_allocation",
+    "metadata_status": "local_pdf_verified"
+  },
+  {
+    "source_id": "PAPER_LIU_2020",
+    "title": "FinRL: A Deep Reinforcement Learning Library for Automated Stock Trading in Quantitative Finance",
+    "authors": ["Xiao-Yang Liu", "et al."],
+    "year": 2020,
+    "topic": "deep_RL",
+    "method": "unified_finance_RL_framework",
+    "url": "https://arxiv.org/abs/2011.09607",
+    "pdf_url": "https://arxiv.org/pdf/2011.09607",
+    "source_type": "arxiv",
+    "accessed_date": "2026-09-21",
+    "local_pdf": {
+      "path": "research/papers/raw/liu_2020_finrl_deep_rl_automated_stock_trading.pdf",
+      "pages": 12,
+      "sha256": "BCB8810089C98DAB432A6FED9B6C674F0F10F737E73071F7E91EEF26DAEBA5C6"
+    },
+    "project_use": "experiment_environment_reference",
+    "metadata_status": "local_pdf_verified"
+  },
+  {
+    "source_id": "PAPER_GANESH_2019",
+    "title": "Reinforcement Learning for Market Making in a Multi-agent Dealer Market",
+    "authors": ["Ganesh et al."],
+    "year": 2019,
+    "topic": "multi_agent_RL",
+    "method": "RL_market_making_multi_agent_dealer_market",
+    "url": "https://arxiv.org/abs/1911.05892",
+    "pdf_url": "https://arxiv.org/pdf/1911.05892",
+    "source_type": "arxiv",
+    "accessed_date": "2026-09-21",
+    "local_pdf": {
+      "path": "research/papers/raw/ganesh_2019_rl_market_making_multi_agent_dealer_market.pdf",
+      "pages": 14,
+      "sha256": "8B3E633F6F38A44088B80664DEF86C915AD6A78A874FFD8D9249BC67C5572BC1"
+    },
+    "project_use": "multi_agent_market_making_baseline",
+    "metadata_status": "local_pdf_verified"
+  },
+  {
+    "source_id": "PAPER_LEE_2020",
+    "title": "MAPS: Multi-Agent Reinforcement Learning-based Portfolio Management System",
+    "authors": ["Jinho Lee", "Raehyun Kim", "Seok-Won Yi", "Jaewoo Kang"],
+    "year": 2020,
+    "topic": "multi_agent_RL",
+    "method": "diverse_investor_agents",
+    "url": "https://www.ijcai.org/proceedings/2020/623",
+    "source_type": "conference",
+    "accessed_date": "2026-09-22",
+    "local_pdf": {
+      "path": "research/papers/raw/lee_2020_maps_multi_agent_portfolio_management.pdf",
+      "pages": 7,
+      "sha256": "50F68A7D7624EBCADCDEB1EA22E21ABBF3400EF019509CA37827435C729CF90C"
+    },
+    "project_use": "multi_agent_portfolio_baseline",
+    "metadata_status": "local_pdf_verified"
+  },
+  {
+    "source_id": "PAPER_MARKOWITZ_1952",
+    "title": "Portfolio Selection",
+    "authors": ["Harry Markowitz"],
+    "year": 1952,
+    "topic": "portfolio_optimization",
+    "method": "mean_variance",
+    "url": "https://doi.org/10.1111/j.1540-6261.1952.tb01525.x",
+    "source_type": "journal",
+    "accessed_date": "2026-09-21",
+    "local_pdf": null,
+    "project_use": "traditional_baseline",
+    "metadata_status": "cataloged_rights_to_verify"
+  },
+  {
+    "source_id": "PAPER_ROCKAFELLAR_2000",
+    "title": "Optimization of Conditional Value-at-Risk",
+    "authors": ["R. Tyrrell Rockafellar", "Stanislav Uryasev"],
+    "year": 2000,
+    "topic": "risk_control",
+    "method": "CVaR_optimization",
+    "url": "https://doi.org/10.21314/jor.2000.038",
+    "source_type": "journal",
+    "accessed_date": "2026-09-21",
+    "local_pdf": null,
+    "project_use": "tail_risk_constraint",
+    "metadata_status": "cataloged_rights_to_verify"
+  },
+  {
+    "source_id": "PAPER_ALMGREN_2001",
+    "title": "Optimal Execution of Portfolio Transactions",
+    "authors": ["Robert Almgren", "Neil Chriss"],
+    "year": 2001,
+    "topic": "execution",
+    "method": "temporary_permanent_impact",
+    "url": "https://doi.org/10.21314/jor.2001.041",
+    "source_type": "journal",
+    "accessed_date": "2026-09-21",
+    "local_pdf": null,
+    "project_use": "execution_corridor_model",
+    "metadata_status": "cataloged_rights_to_verify"
+  },
+  {
+    "source_id": "PAPER_WHITE_2000",
+    "title": "A Reality Check for Data Snooping",
+    "authors": ["Halbert White"],
+    "year": 2000,
+    "topic": "backtest_bias",
+    "method": "reality_check_bootstrap",
+    "url": "https://doi.org/10.1111/1468-0262.00152",
+    "source_type": "journal",
+    "accessed_date": "2026-09-21",
+    "local_pdf": null,
+    "project_use": "model_selection_bias",
+    "metadata_status": "cataloged_rights_to_verify"
+  },
+  {
+    "source_id": "PAPER_BAILEY_2014",
+    "title": "The Deflated Sharpe Ratio",
+    "authors": ["David Bailey", "Marcos López de Prado"],
+    "year": 2014,
+    "topic": "backtest_bias",
+    "method": "deflated_sharpe_ratio",
+    "url": "https://doi.org/10.2139/ssrn.2460551",
+    "source_type": "working_paper",
+    "accessed_date": "2026-09-21",
+    "local_pdf": null,
+    "project_use": "multiple_testing_adjustment",
+    "metadata_status": "cataloged_rights_to_verify"
+  },
+  {
+    "source_id": "PAPER_LOWE_2017_MADDPG",
+    "title": "Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments",
+    "authors": ["Ryan Lowe", "Yi Wu", "Aviv Tamar", "Jean Harb", "Pieter Abbeel", "Igor Mordatch"],
+    "year": 2017,
+    "topic": "multi_agent_RL",
+    "method": "centralized_training_decentralized_execution_actor_critic",
+    "url": "https://arxiv.org/abs/1706.02275",
+    "pdf_url": "https://arxiv.org/pdf/1706.02275",
+    "source_type": "arxiv",
+    "accessed_date": "2026-09-22",
+    "local_pdf": {
+      "path": "research/papers/raw/lowe_2017_maddpg.pdf",
+      "pages": 16,
+      "sha256": "DCBF258875023A4739A266697B3D7377DABFE10993CCEF864FD5CC9373027E6E"
+    },
+    "project_use": "CTDE_candidate_policy_baseline",
+    "metadata_status": "local_pdf_verified"
+  },
+  {
+    "source_id": "PAPER_RASHID_2018_QMIX",
+    "title": "QMIX: Monotonic Value Function Factorisation for Deep Multi-Agent Reinforcement Learning",
+    "authors": ["Tabish Rashid", "Mikayel Samvelyan", "Christian Schroeder de Witt", "Gregory Farquhar", "Jakob Foerster", "Shimon Whiteson"],
+    "year": 2018,
+    "topic": "multi_agent_RL",
+    "method": "monotonic_value_factorization_CTDE",
+    "url": "https://arxiv.org/abs/1803.11485",
+    "pdf_url": "https://arxiv.org/pdf/1803.11485",
+    "source_type": "arxiv",
+    "accessed_date": "2026-09-22",
+    "local_pdf": {
+      "path": "research/papers/raw/rashid_2018_qmix.pdf",
+      "pages": 14,
+      "sha256": "3B26488B9E3279E9F290FE1D1D242E73FFAF6DB2D84F28D23053733862F85D0B"
+    },
+    "project_use": "discrete_route_selection_candidate_baseline",
+    "metadata_status": "local_pdf_verified"
+  },
+  {
+    "source_id": "PAPER_YU_2021_MAPPO",
+    "title": "The Surprising Effectiveness of PPO in Cooperative, Multi-Agent Games",
+    "authors": ["Chao Yu", "Akash Velu", "Eugene Vinitsky", "Jiaxuan Gao", "Yu Wang", "Alexandre Bayen", "Yi Wu"],
+    "year": 2021,
+    "topic": "multi_agent_RL",
+    "method": "PPO_based_cooperative_MARL",
+    "url": "https://arxiv.org/abs/2103.01955",
+    "pdf_url": "https://arxiv.org/pdf/2103.01955",
+    "source_type": "arxiv",
+    "accessed_date": "2026-09-22",
+    "local_pdf": {
+      "path": "research/papers/raw/yu_2021_mappo.pdf",
+      "pages": 30,
+      "sha256": "B7577E38C48E898CC93A1438C266E546091D20A75DBAD8D956000A1B42AB0B97"
+    },
+    "project_use": "continuous_coordination_candidate_baseline",
+    "metadata_status": "local_pdf_verified"
+  },
+  {
+    "source_id": "PAPER_KUMAR_2020_CQL",
+    "title": "Conservative Q-Learning for Offline Reinforcement Learning",
+    "authors": ["Aviral Kumar", "Aurick Zhou", "George Tucker", "Sergey Levine"],
+    "year": 2020,
+    "topic": "offline_RL",
+    "method": "conservative_Q_learning_for_static_logged_data",
+    "url": "https://arxiv.org/abs/2006.04779",
+    "pdf_url": "https://arxiv.org/pdf/2006.04779",
+    "source_type": "arxiv",
+    "accessed_date": "2026-09-22",
+    "local_pdf": {
+      "path": "research/papers/raw/kumar_2020_conservative_q_learning_offline_rl.pdf",
+      "pages": 31,
+      "sha256": "2BAE51A0B45635AB714DF39446CD656A9F4F1C503F512D6D0CE1EEC3198D1716"
+    },
+    "project_use": "offline_policy_candidate_baseline",
+    "metadata_status": "local_pdf_verified"
+  },
+  {
+    "source_id": "PAPER_TAMAR_2015_COHERENT_RISK",
+    "title": "Policy Gradient for Coherent Risk Measures",
+    "authors": ["Aviv Tamar", "Yinlam Chow", "Mohammad Ghavamzadeh", "Shie Mannor"],
+    "year": 2015,
+    "topic": "risk_sensitive_RL",
+    "method": "policy_gradient_for_coherent_risk_measures",
+    "url": "https://arxiv.org/abs/1502.03919",
+    "pdf_url": "https://arxiv.org/pdf/1502.03919",
+    "source_type": "arxiv",
+    "accessed_date": "2026-09-22",
+    "local_pdf": {
+      "path": "research/papers/raw/tamar_2015_policy_gradient_coherent_risk_measures.pdf",
+      "pages": 24,
+      "sha256": "7805DD35DE345F051F868AC6FE7C591C0465140FE9305021EEAE5D14D45136CF"
+    },
+    "project_use": "CVaR_and_coherent_risk_constraint_reference",
+    "metadata_status": "local_pdf_verified"
+  }
+]

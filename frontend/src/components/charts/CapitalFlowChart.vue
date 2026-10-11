@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { echarts, CHART_COLORS } from '@/utils/echarts'
+import { CHART_COLORS } from '@/utils/echarts'
 import { useChart } from '@/composables/useChart'
 import UiCard from '@/components/ui/UiCard.vue'
 
@@ -82,7 +82,7 @@ function buildOption() {
         type: 'bar',
         data: retailData,
         itemStyle: {
-          color: (params: any) => params.value >= 0 ? 'rgba(239,68,68,0.45)' : 'rgba(16,185,129,0.45)',
+          color: (params: any) => params.value >= 0 ? CHART_COLORS.upLight : CHART_COLORS.downLight,
           borderRadius: [3, 3, 0, 0],
         },
       },

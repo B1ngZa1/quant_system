@@ -39,7 +39,7 @@
 
     <el-card class="mt12">
       <template #header><span>待成交/可撤订单</span></template>
-      <el-table :data="pendingOrders" v-loading="loadingPending" stripe>
+      <el-table :data="pendingOrders" v-loading="loading" stripe>
         <el-table-column prop="trade_no" label="订单号" min-width="180" />
         <el-table-column prop="symbol" label="代码" width="120" />
         <el-table-column prop="trade_type" label="方向" width="80" />
@@ -57,7 +57,7 @@
 
     <el-card class="mt12">
       <template #header><span>成交与历史</span></template>
-      <el-table :data="historyOrders" v-loading="loadingHistory" stripe>
+      <el-table :data="historyOrders" v-loading="loading" stripe>
         <el-table-column prop="trade_no" label="订单号" min-width="180" />
         <el-table-column prop="symbol" label="代码" width="120" />
         <el-table-column prop="trade_type" label="方向" width="80" />
@@ -75,14 +75,14 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { cancelTrade, getPortfolioList, getTradeList, submitOrder } from '@/api/trade'
+import { cancelTrade, submitOrder } from '@/api/trade'
+import { usePortfolios } from '@/composables/usePortfolios'
+import { useTrades } from '@/composables/useTrades'
 
-const portfolios = ref<any[]>([])
+const { portfolios, fetchPortfolios } = usePortfolios()
+const { pendingOrders, historyOrders, loading, fetchTrades } = useTrades({ autoFilterPending: true })
+
 const submitting = ref(false)
-const loadingPending = ref(false)
-const loadingHistory = ref(false)
-const pendingOrders = ref<any[]>([])
-const historyOrders = ref<any[]>([])
 
 const orderForm = reactive({
   portfolio_id: undefined as number | undefined,
@@ -94,26 +94,9 @@ const orderForm = reactive({
 })
 
 const loadPortfolios = async () => {
-  const res = await getPortfolioList({ page: 1, page_size: 100, is_simulated: true })
-  portfolios.value = res.data || []
+  await fetchPortfolios({ page_size: 100 })
   if (!orderForm.portfolio_id && portfolios.value.length) {
     orderForm.portfolio_id = portfolios.value[0].id
-  }
-}
-
-const loadOrders = async () => {
-  loadingPending.value = true
-  loadingHistory.value = true
-  try {
-    const [pendingRes, allRes] = await Promise.all([
-      getTradeList({ page: 1, page_size: 50, status: 'pending', is_simulated: true }),
-      getTradeList({ page: 1, page_size: 200, is_simulated: true })
-    ])
-    pendingOrders.value = pendingRes.data || []
-    historyOrders.value = (allRes.data || []).filter((item: any) => item.status !== 'pending')
-  } finally {
-    loadingPending.value = false
-    loadingHistory.value = false
   }
 }
 
@@ -142,21 +125,27 @@ const submit = async () => {
       price: orderForm.order_type === 'limit' ? orderForm.price : undefined
     })
     ElMessage.success('订单提交成功')
-    loadOrders()
+    fetchTrades()
+  } catch (e: unknown) {
+    ElMessage.error((e instanceof Error ? e.message : null) || '订单提交失败')
   } finally {
     submitting.value = false
   }
 }
 
 const cancel = async (id: number) => {
-  await cancelTrade(id)
-  ElMessage.success('撤单成功')
-  loadOrders()
+  try {
+    await cancelTrade(id)
+    ElMessage.success('撤单成功')
+    fetchTrades()
+  } catch (e: unknown) {
+    ElMessage.error((e instanceof Error ? e.message : null) || '撤单失败')
+  }
 }
 
 onMounted(async () => {
   await loadPortfolios()
-  await loadOrders()
+  await fetchTrades()
 })
 </script>
 

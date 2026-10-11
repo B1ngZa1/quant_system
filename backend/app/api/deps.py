@@ -8,7 +8,7 @@ from sqlalchemy.orm import noload
 
 from app.db.session import get_db
 from app.db.redis import get_redis, RedisCache
-from app.core.security import verify_token, decode_token, security_bearer
+from app.core.security import decode_token, security_bearer
 from app.models.user import User
 
 # 登录/鉴权仅需 users 表字段，勿触发 strategies/trades 等集合加载（库表缺列或过大时避免 500）
@@ -19,12 +19,8 @@ USER_AUTH_LOAD_OPTIONS = (
     noload(User.trades),
 )
 
-# 本地访客用户（无需登录时使用）
-_GUEST_USER: Optional[User] = None
-
-
 def _make_guest_user() -> User:
-    """构造一个内存中的访客 User 对象（不写库）"""
+    """构造一个内存中的访客 User 对象（不写库，每次返回新实例避免共享可变状态）"""
     u = User.__new__(User)
     u.id = 0
     u.username = "local_user"
@@ -49,20 +45,20 @@ async def get_current_user(
 ) -> User:
     """获取当前用户（无 token 时返回本地访客用户）"""
     if not credentials:
-        return _get_or_create_guest()
+        return _make_guest_user()
 
     token = credentials.credentials
     payload = decode_token(token)
     if not payload:
-        return _get_or_create_guest()
+        return _make_guest_user()
 
     user_id = payload.get("sub")
     if not user_id:
-        return _get_or_create_guest()
+        return _make_guest_user()
     try:
         user_id = int(user_id)
     except (TypeError, ValueError):
-        return _get_or_create_guest()
+        return _make_guest_user()
 
     result = await db.execute(
         select(User).options(*USER_AUTH_LOAD_OPTIONS).where(User.id == user_id)
@@ -70,16 +66,9 @@ async def get_current_user(
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active:
-        return _get_or_create_guest()
+        return _make_guest_user()
 
     return user
-
-
-def _get_or_create_guest() -> User:
-    global _GUEST_USER
-    if _GUEST_USER is None:
-        _GUEST_USER = _make_guest_user()
-    return _GUEST_USER
 
 
 async def get_current_active_user(

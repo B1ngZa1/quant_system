@@ -1,10 +1,27 @@
 <template>
   <div class="page-container">
-    <h2 class="page-title">数据中心</h2>
-    <p class="page-desc">
-      行情数据优先来自 <strong>AKShare</strong> 实时快照，其次为数据库缓存；无网络时可使用本地导出的
-      <code>market_snapshot.csv</code> 作为兜底。K 线与回测历史数据同样支持库内数据、AKShare 与本地 CSV。
-    </p>
+    <header class="data-page-heading">
+      <div>
+        <span class="page-eyebrow">DATA CENTER</span>
+        <h2 class="page-title">数据中心</h2>
+        <p class="page-desc">
+          查看聚合行情快照与数据源健康状态。行情支持 AKShare、数据库缓存和本地快照等数据路径。
+        </p>
+      </div>
+      <span class="heading-mark" aria-hidden="true">DATA / 01</span>
+    </header>
+
+    <div class="data-scope" aria-label="数据中心功能范围">
+      <div class="data-scope__item">
+        <span class="scope-index">01</span>
+        <span><strong>聚合行情</strong><small>分页浏览与条件检索</small></span>
+      </div>
+      <div class="data-scope__item">
+        <span class="scope-index">02</span>
+        <span><strong>数据源健康</strong><small>查看当前来源与服务状态</small></span>
+      </div>
+      <p class="data-source-note">行情快照优先读取实时数据，其次使用缓存；无网络时可使用本地 <code>market_snapshot.csv</code>。K 线与回测历史数据也支持数据库、AKShare 与本地 CSV。</p>
+    </div>
 
     <el-tabs v-model="activeTab" class="data-tabs">
       <el-tab-pane label="聚合行情" name="quotes">
@@ -150,16 +167,101 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+.data-page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.page-eyebrow {
+  color: var(--primary-600);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.page-title {
+  margin-top: 5px;
+}
+
 .page-desc {
   color: var(--el-text-color-secondary);
   font-size: 14px;
   line-height: 1.6;
-  margin: 0 0 16px;
+  margin: 6px 0 0;
   max-width: 920px;
 }
 
 .data-tabs {
-  margin-top: 8px;
+  margin-top: 18px;
+}
+
+.heading-mark {
+  padding: 7px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.data-scope {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(190px, 0.75fr) minmax(220px, 1.55fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.data-scope__item {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: var(--bg-panel);
+}
+
+.scope-index {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--primary-50);
+  color: var(--primary-600);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.data-scope__item > span:last-child {
+  display: grid;
+  gap: 2px;
+}
+
+.data-scope__item strong {
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.data-scope__item small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.data-source-note {
+  margin: 0;
+  align-self: center;
+  padding: 0 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .header-row {
@@ -201,5 +303,84 @@ code {
   padding: 2px 6px;
   background: var(--el-fill-color-light);
   border-radius: 4px;
+}
+
+:deep(.el-tabs__header) {
+  margin-bottom: 14px;
+}
+
+:deep(.el-tabs__item) {
+  font-weight: 600;
+}
+
+:deep(.el-card) {
+  border-radius: 8px;
+  border-color: var(--line-soft);
+  box-shadow: var(--shadow-base);
+}
+
+:deep(.el-card__header) {
+  color: var(--text-primary);
+  font-weight: 650;
+}
+
+@media (max-width: 900px) {
+  .data-scope {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .data-source-note {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .data-page-heading {
+    align-items: flex-start;
+  }
+
+  .heading-mark {
+    display: none;
+  }
+
+  .data-scope {
+    grid-template-columns: 1fr;
+  }
+
+  .data-source-note {
+    grid-column: auto;
+    padding: 4px 2px;
+  }
+
+  .header-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions :deep(.el-input),
+  .header-actions :deep(.el-select),
+  .header-actions :deep(.el-button) {
+    width: 100% !important;
+    margin-left: 0;
+  }
+
+  .meta-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pagination-wrapper {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .pagination-wrapper :deep(.el-pagination) {
+    flex-wrap: nowrap;
+  }
 }
 </style>

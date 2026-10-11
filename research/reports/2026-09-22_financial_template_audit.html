@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>量化交易软件财务模板审计：研究可用，不能用于证券决策</title>
+  <style>
+    :root { --ink:#182237; --muted:#5b667a; --paper:#f4f7fb; --card:#fff; --line:#d7deea; --navy:#183b5c; --teal:#087a72; --amber:#9b5f00; --red:#b42318; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif; }
+    main { max-width:1110px; margin:auto; padding:34px 24px 60px; }
+    h1 { max-width:850px; margin:.1rem 0 .75rem; font-size:clamp(1.9rem,4vw,3rem); line-height:1.14; letter-spacing:-.035em; }
+    h2 { margin:0 0 .8rem; font-size:1.2rem; }
+    p { margin:.55rem 0; }
+    .eyebrow { color:var(--teal); font-size:.78rem; font-weight:800; letter-spacing:.065em; text-transform:uppercase; }
+    .lede { max-width:850px; color:var(--muted); font-size:1.07rem; }
+    .verdict { display:grid; grid-template-columns:170px 1fr; gap:18px; margin:26px 0; padding:20px; border:1px solid #b8d9d4; border-radius:12px; background:#eaf6f4; }
+    .verdict strong { color:#075b55; font-size:1.12rem; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:18px 0; }
+    .card, section { border:1px solid var(--line); border-radius:12px; background:var(--card); box-shadow:0 1px 2px rgb(24 34 55 / .04); }
+    .card { padding:17px; }
+    .label { color:var(--muted); font-size:.86rem; }
+    .value { margin:.38rem 0; color:var(--navy); font-size:1.65rem; font-weight:800; }
+    section { margin-top:17px; padding:22px; }
+    .callout { padding:14px 16px; border-left:4px solid var(--amber); background:#fff8e8; }
+    table { width:100%; border-collapse:collapse; margin-top:12px; font-size:.92rem; }
+    th,td { padding:10px 9px; vertical-align:top; text-align:left; border-bottom:1px solid var(--line); }
+    th { color:var(--muted); font-weight:750; }
+    .severity { font-weight:750; color:var(--amber); white-space:nowrap; }
+    .low { color:var(--muted); }
+    .two { display:grid; grid-template-columns:1fr 1fr; gap:17px; }
+    ol,ul { margin:.6rem 0 0; padding-left:1.25rem; }
+    a { color:#1b4fa3; }
+    .small { color:var(--muted); font-size:.88rem; }
+    code { padding:1px 4px; border-radius:4px; background:#edf1f6; }
+    @media (max-width:760px) { main { padding:24px 15px 45px; } .verdict,.grid,.two { grid-template-columns:1fr; } section { padding:17px; } table { min-width:650px; } .table-wrap { overflow-x:auto; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Model audit · 2026-09-22 · research templates</p>
+    <h1>模板在研究层面可用，但不能支撑公司预测或证券决策</h1>
+    <p class="lede">本审计覆盖一个三表预测模板和一个市场覆盖/销售管道模板。结论区分了机械完整性、来源支持和投资决策适用性；没有使用当前股价、估值、共识或真实销售机会。</p>
+
+    <section class="verdict" aria-label="审计结论">
+      <strong>Ready with caveats</strong>
+      <div><b>允许用途：</b>量化交易软件项目的研究、情景规划、来源登记和内部财务讨论。<br><b>禁止推断：</b>任何上市公司盈利预测、估值、目标价、买卖建议或真实销售管道结论。<br><span class="small">原因：工作簿静态结构健康，但输入仍以合成/研究假设为主，且没有证券层面的价格、共识、估值或可比公司桥接。</span></div>
+    </section>
+
+    <div class="grid" aria-label="模板审计指标">
+      <article class="card"><div class="label">三表预测模板</div><div class="value">16 tabs · 2,781 formulas</div><div class="small">无外部工作簿链接；公式/已存储错误扫描未发现 <code>#REF!</code>、<code>#NAME?</code> 等错误。</div></article>
+      <article class="card"><div class="label">三表内部校验</div><div class="value">7 / 7 PASS</div><div class="small">Artifact Tool 导入后，资产负债表、现金、留存收益、营运资本、固定资产、递延收入和无平衡 plug 均显示通过。</div></article>
+      <article class="card"><div class="label">市场覆盖模板</div><div class="value">1 tab · 83 formulas</div><div class="small">无外部工作簿链接；它记录研究覆盖，而不是已验证商业机会。</div></article>
+    </div>
+
+    <section>
+      <h2>关键审计发现</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>严重度</th><th>类型</th><th>位置</th><th>发现与影响</th><th>建议处理</th></tr></thead>
+        <tbody>
+          <tr><td class="severity">Medium</td><td>Unsupported assumption</td><td>三表：<code>HC!C54:N64</code></td><td>静态扫描标记了 211 个公式中的数字字面量。抽样显示它们主要是生产率爬坡的 25% / 50% / 75% 等示例分数，而非已来源化事实。</td><td>若要把模板转成可编辑正式模型，将爬坡曲线移至明确的 Assumptions 表，并记录来源或假设负责人；当前模板可保留为示例。</td></tr>
+          <tr><td class="severity">Medium</td><td>Formula/control review</td><td>三表：<code>Exec Sum!O16:O22</code></td><td>七个校验使用 <code>0.01</code> 容差。该容差在当前模型中一致且所有检查为 PASS，但其单位/尺度应在任何真实公司模型中明确。</td><td>按模型单位定义一个可审计容差，并在实际模型的检查说明中记录。</td></tr>
+          <tr><td class="severity">Medium</td><td>Missing decision output</td><td>两个模板整体</td><td>没有已核验的当前价格、股份数、共识、估值桥、目标价或下行情景，因此不能回答“市场价格隐含什么”或采取证券行动。</td><td>如需要投资用途，先建立有 as-of 日期的市场数据、估值/情景层和 filing-to-cell 来源桥，再重新审计。</td></tr>
+          <tr><td class="severity">Medium</td><td>Not comparable without bridge</td><td>财务来源包</td><td>53 条中国标准化事实与 80 条海外事实保留原始币种、会计口径和页码；它们适合方向性研究，尚不构成统一可比估值面板。</td><td>先统一报告期、币种、单位、业务分部和客户资金/结算余额处理，再做横向倍数或现金流比较。</td></tr>
+          <tr><td class="low">Low</td><td>Presentation/readiness</td><td>覆盖模板：<code>Sales Pipeline!S23</code></td><td><code>114</code> 是“100 deal rows (15:114)”的容量标签；静态扫描将其识别为数字字面量。首个工作表本身就是使用面，不是传统 Cover。</td><td>不影响研究覆盖使用；若转为真实 CRM 管道，改为参数化容量、日期和机会来源，并补充真实拥有者和证据。</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <div class="two">
+      <section>
+        <h2>来源与校验范围</h2>
+        <ul>
+          <li>16 个财务来源记录中有 13 个本地年报 PDF；路径、SHA-256 和声明页数已逐项校验。</li>
+          <li>三家中国公司 FY2025 的 53 条标准化事实和十家海外可比公司的 80 条页码级事实保留原始 URL/报告页。</li>
+          <li>本审计检查结构、公式文本、外部链接、存储错误、主要检查格和来源台账；未改变任何单元格、公式或格式。</li>
+        </ul>
+        <p class="small">证据：<a href="../financials/source_index.csv">来源索引</a>、<a href="../financials/financials_normalized.csv">中国标准化事实</a>、<a href="../financials/financials_overseas_normalized.csv">海外标准化事实</a>、<a href="2026-09-22_research_registry_validation.md">研究台账验证</a>。</p>
+      </section>
+      <section>
+        <h2>重新审计前的最低修复顺序</h2>
+        <ol>
+          <li>把历史事实、外部估计、管理层口径、推导计算与项目假设逐行标注，并将每个关键驱动关联到 source ID。</li>
+          <li>将生产率/爬坡等可编辑假设从公式常量中外置，保留公式的透明可追溯性。</li>
+          <li>为需要公开股权用途的模型添加正确证券与 as-of 日期的市场价格、估值和下行情景层。</li>
+          <li>在 Excel 原生重新计算后，对关键输出进行 filing-to-cell 与输入变动测试；通过后再给出新的审计结论。</li>
+        </ol>
+      </section>
+    </div>
+
+    <section>
+      <h2>限制与边界</h2>
+      <p class="callout">静态扫描没有发现断裂外链或已存储公式错误，但不能替代 Excel 原生重新计算、审计意见、完整会计调整、监管审阅或真实客户/市场数据验证。外部市场估计、合成模板输入和覆盖名单不应被写成公司指引、共识或承销结论。</p>
+      <p class="small">本文件不包含交易建议，也不授权账户连接、订单提交、融资、投资或产品上线。</p>
+    </section>
+  </main>
+</body>
+</html>

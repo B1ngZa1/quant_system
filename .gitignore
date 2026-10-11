@@ -39,12 +39,32 @@ env/
 
 # Environment variables
 .env
+.env.*
+!.env.example
+!.env.docker
 .env.local
 .env.*.local
 
 # Database
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
 *.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3-shm
+*.sqlite3-wal
+*.duckdb
+*.duckdb.wal
+
+# Test and analysis caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
 
 # Logs
 logs/
@@ -93,8 +113,12 @@ temp/
 *.tmp
 
 # Docker and build
-**/.dockerignore
 **/.DS_Store
 
 # Broken local junctions/symlinks (Windows local dataset links)
 backend/data/local_datasets/a_share_daily_adj/
+
+# Downloaded originals stay local until redistribution rights are verified.
+# Source registries, hashes and research code remain versioned.
+research/**/raw/**/*.pdf
+research/**/raw/*.pdf

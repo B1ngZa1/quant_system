@@ -1,35 +1,19 @@
 <template>
   <div>
     <header class="dash-head">
-      <div class="dash-head__intro">
-        <div class="dash-head__copy">
-          <span class="dash-head__eyebrow">Quant System Cockpit</span>
-          <h1 class="dash-head__title">{{ greeting }}，{{ userName }}</h1>
-          <p class="dash-head__desc">
-            面向高校金融与计算机学生的量化研究终端，聚合行情浏览、因子研究、策略回测与风险解释。
-          </p>
-          <p class="dash-head__meta">
-            <span>{{ today }}</span>
-            <span class="dash-head__dot">·</span>
-            <span>{{ marketStatus }}</span>
-            <span class="dash-head__dot">·</span>
-            <span class="dash-head__muted">最近刷新 {{ clock }}</span>
-          </p>
-        </div>
-        <div class="dash-head__stats">
-          <div class="dash-head__stat-card">
-            <span class="dash-head__stat-label">研究模式</span>
-            <strong class="dash-head__stat-value">红色教学终端</strong>
-          </div>
-          <div class="dash-head__stat-card">
-            <span class="dash-head__stat-label">数据流程</span>
-            <strong class="dash-head__stat-value">行情 / 因子 / 回测</strong>
-          </div>
-        </div>
+      <div class="dash-head__copy">
+        <h1 class="dash-head__title">研究驾驶舱</h1>
+        <p class="dash-head__meta">
+          <span>{{ today }}</span>
+          <span class="dash-head__dot">/</span>
+          <span>{{ marketStatus }}</span>
+          <span class="dash-head__dot">/</span>
+          <span class="dash-head__muted">{{ userName === '访客' ? '访客模式' : `${userName} 的工作区` }} · 当前时间 {{ clock }}</span>
+        </p>
       </div>
 
-      <div class="dash-head__actions">
-        <el-button text type="primary" size="small" class="dash-head__btn-text" @click="$emit('refresh')">
+      <div class="dash-head__actions" aria-label="研究操作">
+        <el-button text size="small" class="dash-head__btn-text" @click="$emit('refresh')">
           <el-icon><Refresh /></el-icon>
           刷新数据
         </el-button>
@@ -42,37 +26,22 @@
         </el-button>
       </div>
 
-      <div class="dash-head__chips">
-        <span class="dash-head__chip">K线与成交量</span>
-        <span class="dash-head__chip">因子热力图</span>
-        <span class="dash-head__chip">权益曲线</span>
-        <span class="dash-head__chip">风险解释</span>
-        <span class="dash-head__chip">教学友好</span>
-      </div>
-
-      <div class="dash-head__glow"></div>
-      <div class="dash-head__grid"></div>
     </header>
 
-    <section class="dash-head-highlight">
-      <div class="dash-head-highlight__item">
-        <span class="dash-head-highlight__label">核心定位</span>
-        <strong>量化研究与可视化教学平台</strong>
+    <div class="research-status" role="status">
+      <div class="research-status__source">
+        <span class="research-status__mark" aria-hidden="true"></span>
+        <span>研究 / 模拟环境</span>
+        <span class="research-status__sep" aria-hidden="true">·</span>
+        <span>行情与资讯按数据源可用状态展示</span>
       </div>
-      <div class="dash-head-highlight__item">
-        <span class="dash-head-highlight__label">主题风格</span>
-        <strong>深赤红 + 炭黑 + 暖金</strong>
-      </div>
-      <div class="dash-head-highlight__item">
-        <span class="dash-head-highlight__label">信息结构</span>
-        <strong>概览 / 控制 / 研究 / 风险</strong>
-      </div>
-    </section>
+      <span class="research-status__notice">研究与模拟，不构成投资建议</span>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import dayjs from 'dayjs'
 import { Refresh, Plus } from '@element-plus/icons-vue'
 
@@ -87,13 +56,6 @@ defineEmits<{
 }>()
 
 const clock = ref(dayjs().format('HH:mm'))
-
-const greeting = computed(() => {
-  const h = dayjs().hour()
-  if (h < 12) return '早安'
-  if (h < 18) return '下午好'
-  return '晚上好'
-})
 
 let tick: number | undefined
 
@@ -116,10 +78,7 @@ onUnmounted(() => {
   margin-bottom: 18px;
   border-radius: 28px;
   border: 1px solid var(--line-strong);
-  background:
-    radial-gradient(circle at 85% 18%, rgba(96, 165, 250, 0.18), transparent 26%),
-    radial-gradient(circle at 18% 20%, rgba(212, 162, 76, 0.14), transparent 20%),
-    linear-gradient(135deg, rgba(30, 64, 175, 0.5), rgba(28, 20, 26, 0.92));
+  background: var(--bg-panel);
   box-shadow: var(--shadow-lg);
 
   &__intro {
@@ -138,7 +97,7 @@ onUnmounted(() => {
   &__eyebrow {
     display: inline-block;
     margin-bottom: 10px;
-    color: rgba(255, 244, 239, 0.8);
+    color: var(--primary-600);
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.14em;
@@ -149,7 +108,7 @@ onUnmounted(() => {
     font-size: 32px;
     line-height: 1.18;
     font-weight: 700;
-    color: #fff8f6;
+    color: var(--text-primary);
     letter-spacing: -0.03em;
   }
 
@@ -157,14 +116,14 @@ onUnmounted(() => {
     max-width: 760px;
     margin: 0 0 12px;
     font-size: 14px;
-    color: rgba(255, 241, 236, 0.82);
+    color: var(--text-secondary);
     line-height: 1.75;
   }
 
   &__meta {
     margin: 0;
     font-size: 12px;
-    color: rgba(255, 228, 220, 0.72);
+    color: var(--text-muted);
   }
 
   &__dot {
@@ -184,23 +143,29 @@ onUnmounted(() => {
   &__stat-card {
     padding: 16px 18px;
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(12px);
+    background: var(--bg-panel-soft);
+    border: 1px solid var(--line-soft);
+    backdrop-filter: none;
+    transition: background 0.2s ease, transform 0.15s ease;
+
+    &:hover {
+      background: var(--surface-hover);
+      transform: translateY(-1px);
+    }
   }
 
   &__stat-label {
     display: block;
     margin-bottom: 6px;
     font-size: 11px;
-    color: rgba(255, 228, 220, 0.68);
+    color: var(--text-muted);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
   &__stat-value {
     display: block;
-    color: #fff6f3;
+    color: var(--text-primary);
     font-size: 16px;
     font-weight: 700;
   }
@@ -222,13 +187,13 @@ onUnmounted(() => {
   }
 
   &__btn-secondary {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.04);
-    color: #fff3ef;
+    border: 1px solid var(--line-soft);
+    background: transparent;
+    color: var(--text-secondary);
   }
 
   &__btn-text {
-    color: #ffd4cf;
+    color: var(--primary-600);
   }
 
   &__chips {
@@ -246,9 +211,9 @@ onUnmounted(() => {
     height: 32px;
     padding: 0 12px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: rgba(255, 241, 236, 0.82);
+    background: var(--bg-panel-soft);
+    border: 1px solid var(--line-soft);
+    color: var(--text-secondary);
     font-size: 12px;
   }
 
@@ -260,14 +225,14 @@ onUnmounted(() => {
   }
 
   &__glow {
-    background: radial-gradient(circle at right, rgba(37, 99, 235, 0.22), transparent 28%);
+    background: radial-gradient(circle at right, var(--primary-50), transparent 28%);
   }
 
   &__grid {
     opacity: 0.18;
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
     background-size: 32px 32px;
     mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 100%);
   }
@@ -282,10 +247,16 @@ onUnmounted(() => {
   &__item {
     padding: 16px 18px;
     border-radius: 22px;
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-panel);
     border: 1px solid var(--line-soft);
     box-shadow: var(--shadow-base);
     color: var(--text-primary);
+    transition: border-color 0.2s ease, transform 0.15s ease;
+
+    &:hover {
+      border-color: var(--line-strong);
+      transform: translateY(-2px);
+    }
   }
 
   &__label {
@@ -322,6 +293,140 @@ onUnmounted(() => {
 
     &__title {
       font-size: 24px;
+    }
+  }
+}
+
+/* Professional research workspace overrides: quiet surfaces, exact baselines, no decorative chrome. */
+.dash-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 104px;
+  padding: 24px;
+  margin-bottom: 0;
+  overflow: visible;
+  border: 1px solid var(--line-soft);
+  border-radius: 0;
+  background: var(--bg-panel);
+  box-shadow: none;
+
+  &__intro,
+  &__stats,
+  &__chips,
+  &__glow,
+  &__grid {
+    display: none;
+  }
+
+  &__copy {
+    position: static;
+    z-index: auto;
+  }
+
+  &__title {
+    margin: 0 0 10px;
+    color: var(--text-primary);
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__dot {
+    margin: 0;
+    color: var(--line-strong);
+  }
+
+  &__actions {
+    position: static;
+    z-index: auto;
+    justify-content: flex-end;
+    margin: 0;
+  }
+
+  &__btn,
+  &__btn-secondary,
+  &__btn-text {
+    min-width: 92px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+  }
+
+  &__btn-secondary {
+    border-color: var(--line-soft);
+    background: transparent;
+    color: var(--text-secondary);
+  }
+
+  &__btn-text {
+    color: var(--text-secondary);
+  }
+}
+
+.research-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 36px;
+  padding: 8px 24px;
+  border: 1px solid var(--line-soft);
+  border-top: 0;
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  font-size: 11px;
+
+  &__source {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__mark {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--info-500);
+  }
+
+  &__sep {
+    color: var(--line-strong);
+  }
+
+  &__notice {
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 760px) {
+  .dash-head {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 18px;
+  }
+
+  .research-status {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 18px;
+
+    &__notice {
+      white-space: normal;
     }
   }
 }

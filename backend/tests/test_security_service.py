@@ -1,3 +1,5 @@
+import pytest
+
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -27,9 +29,10 @@ def test_access_token_contains_expected_claims():
     assert "exp" in payload
 
 
-def test_refresh_token_verification():
+@pytest.mark.asyncio
+async def test_refresh_token_verification():
     token = create_refresh_token({"sub": "2"})
-    payload = verify_refresh_token(token)
+    payload = await verify_refresh_token(token)
 
     assert payload is not None
     assert payload["sub"] == "2"

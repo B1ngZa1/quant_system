@@ -1,15 +1,26 @@
 <template>
   <div class="page-container">
-    <h2 class="page-title">数据维护</h2>
-    <p class="page-desc">
-      查看数据引擎健康度、同步库统计与本地 <code>backend/data/local_datasets</code> 下的 CSV 文件。回测与行情在 AKShare
-      或数据库不可用时，会尝试本地 K 线（<code>{6位代码}.csv</code>）与行情快照（<code>market_snapshot.csv</code>）。
-    </p>
+    <header class="manage-page-heading">
+      <div>
+        <span class="page-eyebrow">DATA OPERATIONS</span>
+        <h2 class="page-title">数据维护</h2>
+        <p class="page-desc">集中检查数据源、同步状态与本地 CSV 数据集。当前页面仅提供状态查看和刷新。</p>
+      </div>
+      <span class="heading-mark" aria-hidden="true">SYSTEM / 02</span>
+    </header>
 
-    <el-card class="mb-4" shadow="never">
+    <div class="fallback-note">
+      <span class="fallback-note__mark" aria-hidden="true">i</span>
+      <p>当 AKShare 或数据库不可用时，行情与回测会尝试读取本地数据：K 线文件使用 <code>{6位代码}.csv</code>，行情快照使用 <code>market_snapshot.csv</code>。</p>
+    </div>
+
+    <el-card class="manage-card mb-4" shadow="never">
       <template #header>
         <div class="header-row">
-          <span>数据源健康状态</span>
+          <div class="section-heading">
+            <span class="section-index">01</span>
+            <span><strong>数据源健康状态</strong><small>可用性、响应延迟与最近错误</small></span>
+          </div>
           <el-button :loading="loadingStatus" @click="loadStatus">刷新</el-button>
         </div>
       </template>
@@ -35,10 +46,13 @@
       </el-table>
     </el-card>
 
-    <el-card class="mb-4" shadow="never">
+    <el-card class="manage-card mb-4" shadow="never">
       <template #header>
         <div class="header-row">
-          <span>数据库同步概况</span>
+          <div class="section-heading">
+            <span class="section-index">02</span>
+            <span><strong>数据库同步概况</strong><small>当前后端返回的同步统计信息</small></span>
+          </div>
           <el-button :loading="loadingSync" @click="loadSync">刷新</el-button>
         </div>
       </template>
@@ -54,10 +68,13 @@
       </el-descriptions>
     </el-card>
 
-    <el-card shadow="never">
+    <el-card class="manage-card" shadow="never">
       <template #header>
         <div class="header-row">
-          <span>本地数据集文件（CSV）</span>
+          <div class="section-heading">
+            <span class="section-index">03</span>
+            <span><strong>本地数据集文件（CSV）</strong><small>当前环境可读取的数据文件清单</small></span>
+          </div>
           <el-button :loading="loadingLocal" @click="loadLocal">刷新</el-button>
         </div>
       </template>
@@ -168,12 +185,74 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+.manage-page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.page-eyebrow {
+  color: var(--primary-600);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.page-title {
+  margin-top: 5px;
+}
+
 .page-desc {
   color: var(--el-text-color-secondary);
   font-size: 14px;
   line-height: 1.6;
-  margin: 0 0 16px;
+  margin: 6px 0 0;
   max-width: 900px;
+}
+
+.heading-mark {
+  padding: 7px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.fallback-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--primary-100);
+  border-radius: 7px;
+  background: var(--primary-50);
+}
+
+.fallback-note__mark {
+  display: grid;
+  width: 19px;
+  height: 19px;
+  flex: 0 0 19px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--primary-500);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fallback-note p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .mb-4 {
@@ -184,6 +263,44 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.section-index {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--primary-50);
+  color: var(--primary-600);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.section-heading > span:last-child {
+  display: grid;
+  gap: 3px;
+}
+
+.section-heading strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.section-heading small {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 400;
 }
 
 .meta-row {
@@ -196,6 +313,21 @@ onMounted(() => {
 .last-update {
   color: var(--el-text-color-secondary);
   font-size: 13px;
+}
+
+.manage-card {
+  border-radius: 8px;
+  border-color: var(--line-soft);
+  box-shadow: var(--shadow-base);
+}
+
+.manage-card :deep(.el-card__header) {
+  padding: 14px 18px;
+  border-bottom-color: var(--line-soft);
+}
+
+.manage-card :deep(.el-card__body) {
+  padding: 18px;
 }
 
 .sync-error {
@@ -214,5 +346,48 @@ code {
   padding: 2px 6px;
   background: var(--el-fill-color-light);
   border-radius: 4px;
+}
+
+@media (max-width: 600px) {
+  .manage-page-heading {
+    align-items: flex-start;
+  }
+
+  .heading-mark {
+    display: none;
+  }
+
+  .fallback-note {
+    padding: 11px 12px;
+  }
+
+  .header-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .meta-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .manage-card :deep(.el-card__header),
+  .manage-card :deep(.el-card__body) {
+    padding: 14px;
+  }
+
+  .manage-card :deep(.el-descriptions__body .el-descriptions__table) {
+    table-layout: fixed;
+  }
+
+  .manage-card :deep(.el-descriptions__label),
+  .manage-card :deep(.el-descriptions__content) {
+    overflow-wrap: anywhere;
+  }
+
+  .path-hint {
+    overflow-wrap: anywhere;
+  }
 }
 </style>

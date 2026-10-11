@@ -2,7 +2,7 @@
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.api.deps import get_current_user
@@ -408,14 +408,20 @@ async def detail_item(capability: str, current_user=Depends(get_current_user)) -
 async def create_item(current_user=Depends(get_current_user)) -> Any:
     """标准化接口：创建 AI 任务。"""
     _ = current_user
-    return DataResponse(data={"accepted": True, "task": "queued"})
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="AI 任务创建接口尚未实现",
+    )
 
 
 @router.post("/action/{action_name}", response_model=DataResponse[dict])
 async def action_item(action_name: str, current_user=Depends(get_current_user)) -> Any:
     """标准化接口：动作入口。"""
     _ = current_user
-    return DataResponse(data={"action": action_name, "accepted": True})
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=f"动作 '{action_name}' 尚未实现",
+    )
 
 
 @router.put("/update/{capability}", response_model=DataResponse[dict])
@@ -423,11 +429,17 @@ async def action_item(action_name: str, current_user=Depends(get_current_user)) 
 async def update_item(capability: str, current_user=Depends(get_current_user)) -> Any:
     """标准化接口：更新能力配置。"""
     _ = current_user
-    return DataResponse(data={"capability": capability, "updated": True})
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=f"更新能力 '{capability}' 的接口尚未实现",
+    )
 
 
 @router.delete("/remove/{capability}", response_model=DataResponse[dict])
 async def remove_item(capability: str, current_user=Depends(get_current_user)) -> Any:
     """标准化接口：删除能力配置。"""
     _ = current_user
-    return DataResponse(data={"capability": capability, "removed": True})
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=f"删除能力 '{capability}' 的接口尚未实现",
+    )

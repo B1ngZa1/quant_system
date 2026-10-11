@@ -48,6 +48,22 @@ from app.services.local_market_data import (
 )
 
 
+RESEARCH_OPTIMIZATION_UNAVAILABLE_DETAIL = {
+    "status": "unavailable",
+    "feature": "strategy_parameter_optimization",
+    "message": "策略参数优化当前不可用：尚无可端到端执行的研究优化任务。未创建任务，也未生成优化结果。",
+    "research_only": True,
+    "disclaimer": "未来的优化输出仅用于模拟研究，不构成投资建议。",
+}
+
+
+class ResearchOptimizationUnavailableError(RuntimeError):
+    """Raised until a reproducible, research-only optimizer is available end to end."""
+
+    def __init__(self) -> None:
+        super().__init__(RESEARCH_OPTIMIZATION_UNAVAILABLE_DETAIL["message"])
+
+
 class StrategyParser:
     """策略解析器 - 将策略配置转换为可执行策略"""
     
@@ -765,30 +781,12 @@ class BacktestService:
         param_grid: Dict[str, List[Any]]
     ) -> Dict[str, Any]:
         """
-        策略参数优化 (网格搜索)
-        
-        参考: QuantEvolve论文的进化优化思路
+        策略参数优化入口。
+
+        在具备参数化重跑、可用时点数据、交易成本/流动性约束和样本外验证
+        的完整研究工作流之前，禁止返回空的“成功”结果。
         """
-        # 获取原回测
-        stmt = select(Backtest).where(Backtest.id == backtest_id)
-        result = await self.db.execute(stmt)
-        original = result.scalar_one_or_none()
-        
-        if not original:
-            raise ValueError(f"回测不存在: {backtest_id}")
-        
-        optimization_results = []
-        
-        # 简单的网格搜索
-        # 注意: 实际生产环境应该使用更高效的优化算法 (遗传算法、贝叶斯优化等)
-        
-        return {
-            "original_id": backtest_id,
-            "optimization_type": "grid_search",
-            "param_grid": param_grid,
-            "results": optimization_results,
-            "message": "参数优化功能开发中，建议参考QuantEvolve论文实现多智能体进化优化"
-        }
+        raise ResearchOptimizationUnavailableError()
 
 
 # 服务实例创建函数

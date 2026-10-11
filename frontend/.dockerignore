@@ -1,0 +1,12 @@
+.git
+.gitignore
+node_modules
+dist
+.vite
+coverage
+*.log
+*.md
+tmp
+temp
+tests
+**/*.spec.ts

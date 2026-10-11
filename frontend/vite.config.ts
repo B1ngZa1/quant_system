@@ -27,6 +27,9 @@ export default defineConfig(({ mode }) => ({
     }),
     mode === 'production'
       ? viteCompression({ algorithm: 'gzip', ext: '.gz' })
+      : null,
+    mode === 'production'
+      ? viteCompression({ algorithm: 'brotliCompress', ext: '.br' })
       : null
   ],
   test: {

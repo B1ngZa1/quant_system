@@ -6,7 +6,8 @@ from app.main import app
 from app.infrastructure.repositories.market_repository_impl import MockMarketRepository
 from app.domain.entities.kline import Kline
 from app.domain.value_objects.interval import KlineInterval
-from app.api.v1.market import get_market_repository
+from app.api.v1.market import get_market_data_use_case
+from app.application.use_cases.get_market_data import GetMarketDataUseCase
 
 
 @pytest.fixture(autouse=True)
@@ -25,9 +26,9 @@ def _setup_mock_repo():
         amount=100000.0,
     )
     repo._klines.append(kline1)
-    app.dependency_overrides[get_market_repository] = lambda: repo
+    app.dependency_overrides[get_market_data_use_case] = lambda: GetMarketDataUseCase(repo)
     yield
-    app.dependency_overrides.pop(get_market_repository, None)
+    app.dependency_overrides.pop(get_market_data_use_case, None)
 
 
 @pytest.mark.asyncio
@@ -43,7 +44,7 @@ async def test_api_fetch_klines():
             },
         )
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert len(data) == 1
         assert data[0]["open_price"] == 100.0
         assert data[0]["is_bullish"] is True

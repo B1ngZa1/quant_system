@@ -46,7 +46,7 @@ async def run_daily_market_sync_once() -> dict:
         log.info("增量拉取完成，开始后台指标预计算...")
         # 为了避免阻塞实时返回，这里可以作为异步Task投递，这里直接 await
         # 假设这里获取当日或近 N 天的有效 symbols (简单全量查)
-        # TODO: 可以从 inc 的结果里抽取成功更新的 symbols
+        # 优化点：可从增量同步结果中提取成功更新的 symbols，避免全量计算
         try:
             end_date = datetime.now().date()
             start_date = end_date - timedelta(days=lookback)

@@ -1,0 +1,195 @@
+# 可执行的多智能体任务清单：与 QUANT_MULTI_AGENT_WORKFLOW.md 同步使用。
+# 本文件定义写入边界与验收证据，不授予真实交易、账户、密钥或删除权限。
+
+manifest_version: 1
+project: quant_system
+updated: 2026-09-22
+
+runtime:
+  controller: "Use the strongest controller model available on the host."
+  default_subagent_model: gpt-5.6-luna
+  default_subagent_reasoning: xhigh
+  collaboration: "Parallel by disjoint write scope; controller performs source and conflict review."
+
+global_non_negotiables:
+  - "Preserve user changes and untracked files; never run reset, checkout, bulk deletion, or overwrite user artifacts."
+  - "Research originals stay under research/ and retain source URL, access date, report period, license/access note, pages, and SHA-256 when available."
+  - "Distinguish facts, official estimates, external estimates, inferences, and model assumptions in every data output."
+  - "RL and MARL outputs are candidate actions only; an independent risk service and human approval boundary remain mandatory."
+  - "Do not connect a broker, exchange account, API secret, payment method, or real-order endpoint without a separate explicit authorization."
+  - "Cleanup may only move explicitly confirmed candidates to an isolated recovery directory; no permanent deletion is in scope."
+
+tool_boundary:
+  browser_and_computer:
+    allowed: "Visual/DOM verification of public or local artifacts only."
+    prohibited: "Credential entry, account actions, and irreversible external changes."
+  binance:
+    allowed: "Read-only public metadata snapshots with source and access date."
+    prohibited: "Login, balances, keys, order construction, order submission, or real-time trading."
+  canva:
+    allowed: "Optional presentation/brand delivery after the user supplies a brand kit or an explicit design request."
+    prohibited: "Assume a connected Canva account, brand kit, or publication permission."
+  actively:
+    status: "No callable connector verified in the current runtime."
+    fallback: "Record a sales-pipeline schema locally; do not fabricate CRM records."
+  template_creator_and_spreadsheets:
+    allowed: "Reuse the installed forecast and market-coverage templates while preserving formulas, formats, validations, and sources."
+  data_and_visualization:
+    allowed: "Build source-backed CSV, quality checks, research reports, and offline/local visualizations."
+    prohibited: "Invent missing values or represent a dashboard as a live market feed."
+
+agents:
+  - id: A1_project_safety_audit
+    title: "项目整理与安全审计"
+    model: gpt-5.6-luna
+    reasoning: xhigh
+    mode: "read-only unless the user explicitly approves named recovery moves"
+    inputs:
+      - AGENTS.md
+      - docs/QUANT_MULTI_AGENT_WORKFLOW.md
+      - current git status and directory inventory
+    write_scope:
+      - docs/CLEANUP_CANDIDATES.md
+    deliverables:
+      - "Classify source, test, runtime, data, secrets, cache, generated, and uncertain files."
+      - "For each candidate, include impact, recovery path, exact validation command, and explicit-confirmation state."
+    acceptance:
+      - "No candidate is moved, renamed, or deleted without a user confirmation that names its scope."
+      - "All cache candidates remain recoverable."
+
+  - id: A2_toolchain_research
+    title: "Skills、MCP 与照片转 3D 工具检索"
+    model: gpt-5.6-luna
+    reasoning: xhigh
+    mode: "research and isolated setup only"
+    inputs:
+      - research/tooling/RECOMMENDATIONS.md
+      - research/tooling/tooling_registry.csv
+    write_scope:
+      - research/tooling/
+    deliverables:
+      - "Official link, license/access, install/isolation evidence, intended value, cost, alternatives, and rejection rationale."
+      - "Treat photo-to-3D as optional visualization/geospatial tooling, never a quant core dependency."
+    acceptance:
+      - "Installed artifacts have a version/license/smoke-test record."
+      - "No third-party tool receives market credentials or project secrets."
+
+  - id: A3_research_librarian
+    title: "参考文献与页码证据"
+    model: gpt-5.6-luna
+    reasoning: xhigh
+    mode: "source-backed research"
+    inputs:
+      - research/papers/references.csv
+      - research/papers/metadata/
+    write_scope:
+      - research/papers/
+    deliverables:
+      - "RL, offline RL, MARL, execution, market microstructure, CVaR/risk, and backtest-bias literature."
+      - "Separate raw PDF, structured metadata, source log, synthesis notes, and page-level evidence."
+    acceptance:
+      - "Each local PDF has source URL, access date, page count, SHA-256, and a matching source_id."
+      - "Only manual source-page verification may promote a search candidate to project evidence."
+
+  - id: A4_business_text_research
+    title: "50 页以上商业文本与模板资料"
+    model: gpt-5.6-luna
+    reasoning: xhigh
+    mode: "source collection and structure planning; no user-text rewriting"
+    inputs:
+      - research/business-plans/source_registry.csv
+      - research/business-plans/BUSINESS_PLAN_REFERENCES.md
+    write_scope:
+      - research/business-plans/
+    deliverables:
+      - "Public business plans, prospectuses, annual reports, or templates with page-count evidence."
+      - "A section-to-quant-product mapping covering customer, data, compliance, GTM, unit economics, three statements, and cash flow."
+    acceptance:
+      - "Downloaded originals preserve URL, access date, file size, hash, and verified PDF pages when possible."
+      - "No copyrighted long text is copied into product documentation."
+
+  - id: A5_execution_corridor_modeler
+    title: "执行走廊、风险约束与算法实验"
+    model: gpt-5.6-luna
+    reasoning: xhigh
+    mode: "research prototype only"
+    inputs:
+      - research/models/EXECUTION_CORRIDOR_MODEL.md
+      - research/papers/evidence/
+      - research/datasets/DATA_DICTIONARY.md
+    write_scope:
+      - research/models/
+      - 题目分析报告.md
+      - 术语表格.md
+    deliverables:
+      - "State/action/reward/constraint formulation; height=urgency, intersection=regime/risk trigger, lane-change=routing or strategy switch."
+      - "Baselines for TWAP/VWAP/POV, mean-variance/CVaR/MPC, and MARL candidate policies."
+      - "Walk-forward, purged/embargo, transaction-cost, partial-fill, capacity, and stress-test protocol."
+    acceptance:
+      - "All candidate actions pass independent risk projection and human approval."
+      - "Tests prove only the declared research prototype invariants, never production or performance claims."
+
+  - id: A6_market_data_research
+    title: "市场调研、公开数据与数据质量"
+    model: gpt-5.6-luna
+    reasoning: xhigh
+    mode: "source-backed CSV and reproducible quality checks"
+    inputs:
+      - research/market-research/
+      - research/datasets/
+    write_scope:
+      - research/market-research/
+      - research/datasets/
+      - research/reports/
+    deliverables:
+      - "Market activity, software/data/infrastructure demand, competition, customer, compliance, pricing, and cost evidence."
+      - "Raw/processed separation, data dictionary, source registry, validation script/notebook, and explicit missingness rules."
+    acceptance:
+      - "Each CSV preserves metric scope, unit, currency, source, source date, access date, fact/estimate class, and caveats."
+      - "No dataset is promoted to P-I-T backtesting input without provenance, legal/use, adjustment, and available-at evidence."
+
+  - id: A7_public_equity_financials
+    title: "上市公司财报、模板与市场—财务分析"
+    model: gpt-5.6-luna
+    reasoning: xhigh
+    mode: "research-only public-equity workflow"
+    inputs:
+      - research/financials/source_index.csv
+      - research/financials/financials_normalized.csv
+      - research/financials/financials_overseas_normalized.csv
+      - research/market-research/market_research.csv
+    write_scope:
+      - research/financials/
+      - research/reports/
+    deliverables:
+      - "Official annual report/filing source index and page-level normalized facts."
+      - "Income-quality, gross-margin, operating-leverage, cash-conversion, capital-intensity, and sales-cycle analysis."
+      - "Template audit that preserves the installed three-statement and sales-pipeline workbook mechanics."
+    acceptance:
+      - "Separate reported facts, derived calculations, external estimates, and forecast assumptions."
+      - "No target price, buy/sell recommendation, or company-specific forecast is created from template assumptions."
+
+execution_waves:
+  - wave: 1
+    agents: [A1_project_safety_audit, A2_toolchain_research, A3_research_librarian, A4_business_text_research]
+    concurrency_rule: "No overlapping write targets."
+  - wave: 2
+    agents: [A5_execution_corridor_modeler, A6_market_data_research, A7_public_equity_financials]
+    prerequisites:
+      - "A3 supplies only verified citations, not unreviewed search results."
+      - "A6/A7 share source_id and unit/currency rules before writing integrated conclusions."
+  - wave: 3
+    agents: [controller]
+    controller_tasks:
+      - "Reconcile source_id, report period, unit, currency, facts versus estimates, and file hashes."
+      - "Run data/model/template checks and perform a visual check for any new report/dashboard."
+      - "Publish a requirement-by-requirement status with gaps and unexecuted high-risk actions."
+
+completion_evidence:
+  safe_cleanup: "Explicit user confirmation plus recovery move and validation output."
+  tooling: "Registry record plus isolated install/smoke-test or documented rejection."
+  literature: "Search log, source metadata, raw original when allowed, hash/pages, and page-level evidence."
+  business_text: "Source registry with page-count evidence and a structure plan."
+  algorithms: "Mathematical model, research tests, and a no-leakage experimental protocol."
+  market_data: "Source-backed raw/processed CSV, dictionary, source registry, and quality checks."
+  financials: "Official-report index, normalized facts with source pages, workbook audit, and bounded market-financial analysis."

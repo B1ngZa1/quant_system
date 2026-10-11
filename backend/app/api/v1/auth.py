@@ -177,7 +177,7 @@ async def refresh_token(
 ) -> Any:
     """刷新访问令牌"""
     old_refresh_token = payload.refresh_token
-    payload = verify_refresh_token(old_refresh_token)
+    payload = await verify_refresh_token(old_refresh_token)
     if not payload:
         raise BusinessException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -208,7 +208,7 @@ async def refresh_token(
     )
     # refresh token 轮换：每次刷新都签发新 refresh 并吊销旧 refresh
     new_refresh_token = create_refresh_token(data={"sub": user.id})
-    revoke_token(old_refresh_token)
+    await revoke_token(old_refresh_token)
 
     return DataResponse(
         data=Token(
@@ -242,9 +242,9 @@ async def logout(
     if credentials and credentials.credentials:
         token_payload = decode_token(credentials.credentials)
         if token_payload:
-            revoke_token(credentials.credentials)
+            await revoke_token(credentials.credentials)
     if payload.refresh_token:
-        revoke_token(payload.refresh_token)
+        await revoke_token(payload.refresh_token)
     return DataResponse(data={"logged_out": True})
 
 
@@ -294,7 +294,7 @@ async def remove_item(
     if credentials and credentials.credentials:
         token_payload = decode_token(credentials.credentials)
         if token_payload:
-            revoke_token(credentials.credentials)
+            await revoke_token(credentials.credentials)
     if payload.refresh_token:
-        revoke_token(payload.refresh_token)
+        await revoke_token(payload.refresh_token)
     return SuccessResponse(message="已退出登录")

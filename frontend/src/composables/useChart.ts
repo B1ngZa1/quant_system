@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, watch, type Ref, shallowRef } from 'vue'
+import { onMounted, onUnmounted, watch, type Ref, shallowRef } from 'vue'
 import { echarts, withTheme } from '@/utils/echarts'
 
 /**
@@ -11,6 +11,7 @@ export function useChart(
 ) {
   const chart = shallowRef<echarts.ECharts | null>(null)
   let resizeObserver: ResizeObserver | null = null
+  let themeObserver: MutationObserver | null = null
 
   function init() {
     if (!containerRef.value) return
@@ -36,6 +37,8 @@ export function useChart(
   function dispose() {
     resizeObserver?.disconnect()
     resizeObserver = null
+    themeObserver?.disconnect()
+    themeObserver = null
     chart.value?.dispose()
     chart.value = null
   }
@@ -43,14 +46,15 @@ export function useChart(
   onMounted(() => {
     init()
     if (containerRef.value) {
+      // ResizeObserver 已覆盖容器尺寸变化，无需额外 window resize 监听
       resizeObserver = new ResizeObserver(() => resize())
       resizeObserver.observe(containerRef.value)
     }
-    window.addEventListener('resize', resize)
+    themeObserver = new MutationObserver(() => update())
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
   })
 
   onUnmounted(() => {
-    window.removeEventListener('resize', resize)
     dispose()
   })
 

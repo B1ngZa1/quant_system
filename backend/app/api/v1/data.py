@@ -1,7 +1,7 @@
 """数据引擎状态与行情接口"""
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db, get_cache
@@ -130,7 +130,10 @@ async def detail_item(
 @router.post("/create", response_model=DataResponse[dict])
 async def create_item() -> Any:
     """标准化接口：创建任务。"""
-    return DataResponse(data={"accepted": True, "message": "数据采集任务已受理"})
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="数据采集任务接口尚未实现",
+    )
 
 
 @router.post("/action/{action_name}", response_model=DataResponse[dict])
@@ -138,18 +141,27 @@ async def action_item(action_name: str) -> Any:
     """标准化接口：动作。"""
     if action_name == "status":
         return await get_source_status()
-    return DataResponse(data={"action": action_name, "accepted": True})
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=f"动作 '{action_name}' 尚未实现",
+    )
 
 
 @router.put("/update/{symbol}", response_model=DataResponse[dict])
 @router.patch("/update/{symbol}", response_model=DataResponse[dict])
 async def update_item(symbol: str) -> Any:
     """标准化接口：更新。"""
-    return DataResponse(data={"symbol": symbol.upper(), "updated": True})
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=f"更新 '{symbol}' 的接口尚未实现",
+    )
 
 
 @router.delete("/remove/{symbol}", response_model=DataResponse[dict])
 async def remove_item(symbol: str) -> Any:
     """标准化接口：删除。"""
-    return DataResponse(data={"symbol": symbol.upper(), "removed": True})
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=f"删除 '{symbol}' 的接口尚未实现",
+    )
 

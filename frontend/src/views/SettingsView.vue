@@ -7,7 +7,7 @@
         <el-form label-width="120px" class="settings-form">
           <el-form-item label="主题模式">
             <el-switch
-              v-model="isDark"
+              :model-value="isDark"
               active-text="深色"
               inactive-text="浅色"
               @change="toggleTheme"
@@ -15,7 +15,7 @@
           </el-form-item>
           <el-form-item label="侧边栏">
             <el-switch
-              v-model="collapsed"
+              :model-value="collapsed"
               active-text="收起"
               inactive-text="展开"
               @change="toggleSidebar"
@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useAppStore } from '@/store/modules/app'
 import SectionHeader from '@/components/ui/SectionHeader.vue'
@@ -63,7 +63,7 @@ function toggleTheme(val: string | number | boolean) {
   appStore.setTheme(theme)
 }
 
-function toggleSidebar(val: string | number | boolean) {
+function toggleSidebar(_val: string | number | boolean) {
   appStore.toggleSidebar()
 }
 

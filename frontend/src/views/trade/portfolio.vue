@@ -61,11 +61,12 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { createPortfolio, getPortfolio, getPortfolioList, submitOrder } from '@/api/trade'
+import { createPortfolio, getPortfolio, submitOrder } from '@/api/trade'
+import { usePortfolios } from '@/composables/usePortfolios'
+import type { Portfolio, Position } from '@/types'
 
-const loading = ref(false)
-const portfolios = ref<any[]>([])
-const positions = ref<any[]>([])
+const { portfolios, loading, fetchPortfolios: loadPortfolios } = usePortfolios()
+const positions = ref<Position[]>([])
 const activePortfolioId = ref<number | null>(null)
 
 const orderForm = reactive({
@@ -75,32 +76,34 @@ const orderForm = reactive({
 })
 
 const fetchPortfolios = async () => {
-  loading.value = true
-  try {
-    const res = await getPortfolioList({ page: 1, page_size: 50, is_simulated: true })
-    portfolios.value = res.data || []
-    if (!activePortfolioId.value && portfolios.value.length > 0) {
-      await selectPortfolio(portfolios.value[0])
-    }
-  } finally {
-    loading.value = false
+  await loadPortfolios({ page_size: 50 })
+  if (!activePortfolioId.value && portfolios.value.length > 0) {
+    await selectPortfolio(portfolios.value[0])
   }
 }
 
-const selectPortfolio = async (row: any) => {
+const selectPortfolio = async (row: Portfolio) => {
   activePortfolioId.value = row.id
-  const res = await getPortfolio(row.id)
-  positions.value = res.data?.positions || []
+  try {
+    const res = await getPortfolio(row.id)
+    positions.value = res.data?.positions || []
+  } catch (e: unknown) {
+    ElMessage.error((e instanceof Error ? e.message : null) || '加载持仓信息失败')
+  }
 }
 
 const createDefaultPortfolio = async () => {
-  await createPortfolio({
-    name: `模拟组合-${Date.now().toString().slice(-5)}`,
-    initial_capital: 1000000,
-    is_simulated: true
-  })
-  ElMessage.success('组合已创建')
-  fetchPortfolios()
+  try {
+    await createPortfolio({
+      name: `模拟组合-${Date.now().toString().slice(-5)}`,
+      initial_capital: 1000000,
+      is_simulated: true
+    })
+    ElMessage.success('组合已创建')
+    fetchPortfolios()
+  } catch (e: unknown) {
+    ElMessage.error((e instanceof Error ? e.message : null) || '创建组合失败')
+  }
 }
 
 const placeOrder = async () => {
@@ -112,19 +115,23 @@ const placeOrder = async () => {
     ElMessage.warning('请输入股票代码')
     return
   }
-  await submitOrder({
-    symbol: orderForm.symbol.trim().toUpperCase(),
-    trade_type: orderForm.trade_type,
-    quantity: orderForm.quantity,
-    portfolio_id: activePortfolioId.value,
-    order_type: 'market'
-  })
-  ElMessage.success('订单已提交')
-  const current = portfolios.value.find((p) => p.id === activePortfolioId.value)
-  if (current) {
-    await selectPortfolio(current)
+  try {
+    await submitOrder({
+      symbol: orderForm.symbol.trim().toUpperCase(),
+      trade_type: orderForm.trade_type,
+      quantity: orderForm.quantity,
+      portfolio_id: activePortfolioId.value,
+      order_type: 'market'
+    })
+    ElMessage.success('订单已提交')
+    const current = portfolios.value.find((p) => p.id === activePortfolioId.value)
+    if (current) {
+      await selectPortfolio(current)
+    }
+    fetchPortfolios()
+  } catch (e: unknown) {
+    ElMessage.error((e instanceof Error ? e.message : null) || '下单失败')
   }
-  fetchPortfolios()
 }
 
 onMounted(fetchPortfolios)

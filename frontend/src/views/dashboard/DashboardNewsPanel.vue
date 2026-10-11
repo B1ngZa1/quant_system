@@ -5,7 +5,7 @@
       <span class="dash-news__badge">{{ items.length }}</span>
     </div>
     <el-scrollbar max-height="calc(100vh - 220px)" class="dash-news__scroll">
-      <div v-if="!items.length && !loading" class="dash-news__empty">暂无资讯数据，可在后端写入 <code>news</code> 表或使用同步任务填充。</div>
+      <div v-if="!items.length && !loading" class="dash-news__empty">暂时没有可展示的资讯。刷新数据，或稍后再来查看。</div>
       <div v-for="item in items" :key="item.id" class="news-item" :class="{ urgent: item.is_urgent }">
         <div class="news-item__top">
           <el-tag v-if="item.category" size="small" effect="plain" class="news-item__cat">{{ item.category }}</el-tag>
@@ -41,10 +41,10 @@ const formatNewsTime = (iso?: string | null) => {
 .dash-news {
   position: sticky;
   top: 12px;
-  background: linear-gradient(180deg, rgba(31, 23, 29, 0.96), rgba(21, 16, 20, 0.9));
-  border-radius: 12px;
+  background: var(--bg-panel);
+  border-radius: 0;
   border: 1px solid var(--line-soft);
-  padding: 10px 0;
+  padding: 0;
   min-height: 120px;
 }
 
@@ -52,13 +52,14 @@ const formatNewsTime = (iso?: string | null) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 12px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 40px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .dash-news__title {
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -66,30 +67,37 @@ const formatNewsTime = (iso?: string | null) => {
   font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.06);
-  padding: 1px 7px;
-  border-radius: 999px;
+  background: var(--bg-panel-soft);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
 }
 
 .dash-news__scroll {
-  padding: 0 8px;
+  padding: 0 6px;
 }
 
 .dash-news__empty {
   font-size: 12px;
   color: var(--text-muted);
-  padding: 12px 8px;
+  padding: 14px 8px;
 }
 
 .news-item {
-  padding: 8px 6px;
-  border-radius: 6px;
-  margin-bottom: 4px;
+  padding: 12px 8px;
+  border-radius: 0;
+  margin: 0;
+  border-bottom: 1px solid var(--line-soft);
+  transition: background-color var(--transition-fast);
+
+  &:hover {
+    background: var(--surface-hover);
+  }
 }
 
 .news-item.urgent {
-  border: 1px solid rgba(37, 99, 235, 0.25);
-  background: rgba(254, 242, 242, 0.6);
+  border: 0;
+  border-left: 2px solid var(--up-color);
+  background: var(--up-bg);
 }
 
 .news-item__top {

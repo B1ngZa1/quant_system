@@ -1,16 +1,27 @@
 <template>
   <div class="explore-view">
-    <SectionHeader title="探索中心" subtitle="板块轮动与资金流向分析" />
+    <SectionHeader title="探索中心" subtitle="板块轮动与资金流向分析 · 演示样本，非实时行情" />
+
+    <el-alert
+      class="sample-disclosure"
+      title="演示样本，非实时行情"
+      description="本页板块涨跌与资金流数值为固定演示样本，仅用于展示图表，不代表当前市场行情或真实资金流。"
+      type="warning"
+      show-icon
+      :closable="false"
+    />
 
     <div class="explore-grid">
-      <div class="explore-grid__full">
-        <SectorHeatmap :height="400" />
+      <div ref="heatmapSentinel" class="explore-grid__full">
+        <el-tag class="chart-sample-label" type="warning" size="small">演示样本，非实时行情</el-tag>
+        <SectorHeatmap v-if="showHeatmap" :height="400" />
+      </div>
+      <div ref="flowSentinel" class="explore-grid__half">
+        <el-tag class="chart-sample-label" type="warning" size="small">演示样本，非实时行情</el-tag>
+        <CapitalFlowChart v-if="showFlow" :height="320" />
       </div>
       <div class="explore-grid__half">
-        <CapitalFlowChart :height="320" />
-      </div>
-      <div class="explore-grid__half">
-        <UiCard title="板块涨跌排行" subtitle="今日行情">
+        <UiCard title="板块涨跌排行" subtitle="演示样本，非实时行情">
           <div class="sector-rank">
             <div
               v-for="s in rankedSectors"
@@ -37,11 +48,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import SectionHeader from '@/components/ui/SectionHeader.vue'
 import UiCard from '@/components/ui/UiCard.vue'
 import SectorHeatmap from '@/components/charts/SectorHeatmap.vue'
 import CapitalFlowChart from '@/components/charts/CapitalFlowChart.vue'
+import { useLazyMount } from '@/composables/useLazyMount'
+
+// IntersectionObserver 延迟渲染重型图表组件
+const heatmapSentinel = ref<HTMLElement>()
+const flowSentinel = ref<HTMLElement>()
+const { shouldMount: showHeatmap } = useLazyMount(heatmapSentinel)
+const { shouldMount: showFlow } = useLazyMount(flowSentinel)
 
 const sectors = [
   { name: '半导体', change: 3.2 },
@@ -88,6 +106,14 @@ const maxChange = computed(() => Math.max(...sectors.map(s => Math.abs(s.change)
   grid-column: 1 / -1;
 }
 
+.sample-disclosure {
+  margin-top: 4px;
+}
+
+.chart-sample-label {
+  margin: 0 0 8px;
+}
+
 .sector-rank {
   display: flex;
   flex-direction: column;
@@ -100,6 +126,13 @@ const maxChange = computed(() => Math.max(...sectors.map(s => Math.abs(s.change)
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
 
   &__name {
     width: 72px;
@@ -112,7 +145,7 @@ const maxChange = computed(() => Math.max(...sectors.map(s => Math.abs(s.change)
   &__bar-wrap {
     flex: 1;
     height: 8px;
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-panel-soft);
     border-radius: 4px;
     overflow: hidden;
   }
@@ -122,8 +155,8 @@ const maxChange = computed(() => Math.max(...sectors.map(s => Math.abs(s.change)
     border-radius: 4px;
     transition: width 0.4s ease;
 
-    &.up { background: linear-gradient(90deg, rgba(239,68,68,0.4), #ef4444); }
-    &.down { background: linear-gradient(90deg, #10b981, rgba(16,185,129,0.4)); }
+    &.up { background: linear-gradient(90deg, var(--up-bg), var(--up-color)); }
+    &.down { background: linear-gradient(90deg, var(--down-bg), var(--down-color)); }
   }
 
   &__val {
@@ -133,8 +166,8 @@ const maxChange = computed(() => Math.max(...sectors.map(s => Math.abs(s.change)
     text-align: right;
     flex-shrink: 0;
 
-    &.up { color: #ef4444; }
-    &.down { color: #10b981; }
+    &.up { color: var(--up-color); }
+    &.down { color: var(--down-color); }
   }
 }
 

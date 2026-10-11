@@ -1,4 +1,4 @@
-"""系统监控接口 - 缓存监控和性能指标"""
+"""系统监控接口 - 缓存监控、数据库健康、性能指标"""
 from typing import Any
 
 from fastapi import APIRouter
@@ -19,6 +19,8 @@ class CacheMetricsResponse(BaseModel):
 
 
 class HealthCheckResponse(BaseModel):
+    postgres: dict
+    duckdb: dict
     redis_connected: bool
     local_cache_enabled: bool
     uptime_seconds: float
@@ -39,7 +41,10 @@ async def reset_cache_metrics() -> Any:
 @router.get("/health/detailed", response_model=DataResponse[HealthCheckResponse])
 async def detailed_health_check() -> Any:
     from app.db.redis import redis_cache
+    from app.db.session import check_db_health
+    from app.db.duckdb_service import duckdb_service
 
+    # Redis
     redis_connected = False
     try:
         if redis_cache._redis:
@@ -48,7 +53,15 @@ async def detailed_health_check() -> Any:
     except Exception:
         pass
 
+    # PostgreSQL
+    pg_health = await check_db_health()
+
+    # DuckDB
+    duck_health = duckdb_service.health_check()
+
     return DataResponse(data={
+        "postgres": pg_health,
+        "duckdb": duck_health,
         "redis_connected": redis_connected,
         "local_cache_enabled": True,
         "uptime_seconds": cache_metrics.get_metrics().get("uptime_seconds", 0),

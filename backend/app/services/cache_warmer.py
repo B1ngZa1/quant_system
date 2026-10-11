@@ -1,11 +1,9 @@
 """缓存预热服务 - 在应用启动时预热热点数据"""
 
 import asyncio
-from typing import List, Callable, Any
-from datetime import datetime, timezone
+from typing import List
 
 from app.core.logging import log
-from app.db.redis import redis_cache
 from app.utils.cache_helper import local_cache
 
 
@@ -39,12 +37,12 @@ class CacheWarmer:
     async def warmup_market_overview(self):
         """预热市场概览数据"""
         try:
-            from app.services.data_engine import data_engine
+            from app.services.data_engine import data_engine_service
             from app.db.session import AsyncSessionLocal
 
             async with AsyncSessionLocal() as db:
                 # 预热市场概览
-                overview = await data_engine.get_market_overview(db)
+                overview = await data_engine_service.get_market_overview(db)
                 cache_key = "market:overview"
                 await local_cache.set(cache_key, overview, ttl=60)
 
@@ -55,12 +53,12 @@ class CacheWarmer:
     async def warmup_hot_stocks(self):
         """预热热门股票数据"""
         try:
-            from app.services.data_engine import data_engine
+            from app.services.data_engine import data_engine_service
             from app.db.session import AsyncSessionLocal
 
             async with AsyncSessionLocal() as db:
                 # 预热热门股票行情
-                quotes = await data_engine.get_quotes(
+                quotes = await data_engine_service.get_quotes(
                     db,
                     page=1,
                     page_size=20,

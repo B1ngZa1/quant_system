@@ -1,4 +1,4 @@
-import { onUnmounted, type Ref } from 'vue'
+import { onUnmounted } from 'vue'
 
 type HotkeyHandler = (e: KeyboardEvent) => void
 interface HotkeyBinding {
